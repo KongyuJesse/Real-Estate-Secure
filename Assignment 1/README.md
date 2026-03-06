@@ -186,3 +186,13 @@ This project satisfies the assignment by:
 - demonstrating the function in `main`
 - including tests
 - documenting the full project and usage in this README
+
+## Collaboration
+
+For changes in this folder, use a short-lived branch from `main`, for example `docs/assignment-1-readme-update` or `feat/assignment-1-improvement`.
+
+Before opening a pull request:
+
+- keep the change scoped to `Assignment 1/` whenever possible
+- run `.\gradlew.bat test`
+- open the pull request into `main`
