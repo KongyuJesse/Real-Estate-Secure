@@ -15,6 +15,8 @@ Use short-lived branches per task, not permanent folder-only branches.
 5. Push the branch.
 6. Open a pull request into `main`.
 
+Pull requests in this repository use the template in `.github/PULL_REQUEST_TEMPLATE.md`.
+
 ## Example
 
 ```powershell
