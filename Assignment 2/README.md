@@ -201,3 +201,13 @@ The tests verify:
 ## Summary
 
 This project provides a small Kotlin console program that demonstrates map creation, filtering, and formatted output using standard Kotlin collection operations.
+
+## Collaboration
+
+For changes in this folder, use a short-lived branch from `main`, for example `docs/assignment-2-readme-update` or `feat/assignment-2-improvement`.
+
+Before opening a pull request:
+
+- keep the change scoped to `Assignment 2/` whenever possible
+- run `.\gradlew.bat test`
+- open the pull request into `main`
