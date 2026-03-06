@@ -245,3 +245,13 @@ The tests verify:
 ## Summary
 
 This project demonstrates list filtering, mapping, average calculation, and numeric formatting in a small Kotlin console application.
+
+## Collaboration
+
+For changes in this folder, use a short-lived branch from `main`, for example `docs/assignment-3-readme-update` or `feat/assignment-3-improvement`.
+
+Before opening a pull request:
+
+- keep the change scoped to `Assignment 3/` whenever possible
+- run `.\gradlew.bat test`
+- open the pull request into `main`
