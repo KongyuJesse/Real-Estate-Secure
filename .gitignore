@@ -1,0 +1,11 @@
+**/.gradle/
+**/.gradle-local/
+**/.kotlin/
+**/build/
+**/.idea/
+**/*.iml
+**/local.properties
+.branch_worktrees/
+gradecalculator/console/bin/
+Thumbs.db
+.DS_Store
