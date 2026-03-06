@@ -288,3 +288,13 @@ Run all console tests:
 ```powershell
 .\gradlew.bat :console:test
 ```
+
+## Collaboration
+
+For changes in this folder, use a short-lived branch from `main`, for example `docs/gradecalculator-readme-update` or `feat/gradecalculator-improvement`.
+
+Before opening a pull request:
+
+- keep the change scoped to `gradecalculator/` whenever possible
+- run `.\gradlew.bat :console:test`
+- open the pull request into `main`
