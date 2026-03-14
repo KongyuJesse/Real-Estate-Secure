@@ -1,0 +1,16 @@
+# Dart and Flutter tooling
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Build artifacts
+build/
+doc/api/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
