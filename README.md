@@ -7,6 +7,8 @@ This repository is organized as a single monorepo. The `main` branch is intended
 - `Assignment 1/`
 - `Assignment 2/`
 - `Assignment 3/`
+- `Assignment 4/`
+- `Assignment 5/`
 - `gradecalculator/`
 - `Real-Estate-Secure-Project/`
 
