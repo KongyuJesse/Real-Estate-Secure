@@ -1,0 +1,21 @@
+name: realestate_secure
+description: RealEstate Secure Flutter Android app.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  file_picker: ^10.3.10
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
