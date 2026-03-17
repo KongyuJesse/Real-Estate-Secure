@@ -1,5 +1,3 @@
-import 'types.dart';
-
 class PageRequest {
   const PageRequest({this.page = 1, this.limit = 20});
 
@@ -25,7 +23,7 @@ class PageRequest {
   }
 }
 
-class Page<T> implements JsonEncodable {
+class Page<T> {
   const Page({
     required this.items,
     required this.page,

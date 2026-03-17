@@ -17,12 +17,12 @@ class AppConfig {
 
   bool get isProduction => environment.toLowerCase() == 'production';
 
-  static AppConfig fromEnv(Map<String, String> env) {
-    final environment = env['APP_ENV'] ?? 'development';
-    final port = int.tryParse(env['PORT'] ?? '') ?? 8080;
-    final databaseUrl = env['DATABASE_URL'] ?? '';
-    final jwtSecret = env['JWT_SECRET'] ?? 'change-me';
-    final logLevel = _parseLogLevel(env['LOG_LEVEL'] ?? 'info');
+  static AppConfig fromEnv(String? Function(String key) readEnv) {
+    final environment = readEnv('APP_ENV') ?? 'development';
+    final port = int.tryParse(readEnv('PORT') ?? '') ?? 8080;
+    final databaseUrl = readEnv('DATABASE_URL') ?? '';
+    final jwtSecret = readEnv('JWT_SECRET') ?? 'change-me';
+    final logLevel = _parseLogLevel(readEnv('LOG_LEVEL') ?? 'info');
 
     return AppConfig(
       environment: environment,

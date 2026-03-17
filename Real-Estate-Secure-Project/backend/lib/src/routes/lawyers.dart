@@ -7,7 +7,7 @@ import '../core/request.dart';
 import '../middleware/request_context.dart';
 import '../models/user_profile.dart';
 
-final List<LawyerProfile> _sampleLawyers = [
+const List<LawyerProfile> _sampleLawyers = [
   LawyerProfile(
     id: 'law-001',
     uuid: '9f4a3e93-5c7f-4f6e-8c8d-1d13c0c1a201',
@@ -38,8 +38,10 @@ Router buildLawyersRouter() {
   router.get('/', (Request request) {
     final pageRequest = PageRequest.fromQuery(request.url.queryParameters);
     final start = pageRequest.offset;
-    final end =
-        (start + pageRequest.limit).clamp(0, _sampleLawyers.length) as int;
+    var end = start + pageRequest.limit;
+    if (end > _sampleLawyers.length) {
+      end = _sampleLawyers.length;
+    }
     final pageItems = start >= _sampleLawyers.length
         ? <LawyerProfile>[]
         : _sampleLawyers.sublist(start, end);

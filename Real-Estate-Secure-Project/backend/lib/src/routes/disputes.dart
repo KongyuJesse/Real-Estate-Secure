@@ -24,8 +24,10 @@ Router buildDisputesRouter() {
   router.get('/', (Request request) {
     final pageRequest = PageRequest.fromQuery(request.url.queryParameters);
     final start = pageRequest.offset;
-    final end =
-        (start + pageRequest.limit).clamp(0, _sampleDisputes.length) as int;
+    var end = start + pageRequest.limit;
+    if (end > _sampleDisputes.length) {
+      end = _sampleDisputes.length;
+    }
     final pageItems = start >= _sampleDisputes.length
         ? <DisputeSummary>[]
         : _sampleDisputes.sublist(start, end);

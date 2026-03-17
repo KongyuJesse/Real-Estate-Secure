@@ -170,9 +170,13 @@ Router buildUsersRouter() {
   router.get('/', (Request request) {
     final pageRequest = PageRequest.fromQuery(request.url.queryParameters);
     final start = pageRequest.offset;
-    final end = (start + pageRequest.limit).clamp(0, _sampleUsers.length) as int;
-    final pageItems =
-        start >= _sampleUsers.length ? <UserProfile>[] : _sampleUsers.sublist(start, end);
+    var end = start + pageRequest.limit;
+    if (end > _sampleUsers.length) {
+      end = _sampleUsers.length;
+    }
+    final pageItems = start >= _sampleUsers.length
+        ? <UserProfile>[]
+        : _sampleUsers.sublist(start, end);
 
     return okResponse(
       pageItems.map((user) => user.toJson()).toList(),

@@ -42,8 +42,10 @@ Router buildMessagingRouter() {
   router.get('/conversations', (Request request) {
     final pageRequest = PageRequest.fromQuery(request.url.queryParameters);
     final start = pageRequest.offset;
-    final end =
-        (start + pageRequest.limit).clamp(0, _sampleConversations.length) as int;
+    var end = start + pageRequest.limit;
+    if (end > _sampleConversations.length) {
+      end = _sampleConversations.length;
+    }
     final pageItems = start >= _sampleConversations.length
         ? <ConversationSummary>[]
         : _sampleConversations.sublist(start, end);

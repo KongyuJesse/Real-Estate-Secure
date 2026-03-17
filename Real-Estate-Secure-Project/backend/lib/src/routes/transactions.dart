@@ -34,8 +34,10 @@ Router buildTransactionsRouter() {
   router.get('/', (Request request) {
     final pageRequest = PageRequest.fromQuery(request.url.queryParameters);
     final start = pageRequest.offset;
-    final end =
-        (start + pageRequest.limit).clamp(0, _sampleTransactions.length) as int;
+    var end = start + pageRequest.limit;
+    if (end > _sampleTransactions.length) {
+      end = _sampleTransactions.length;
+    }
     final pageItems = start >= _sampleTransactions.length
         ? <TransactionSummary>[]
         : _sampleTransactions.sublist(start, end);

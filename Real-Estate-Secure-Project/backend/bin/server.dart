@@ -8,8 +8,8 @@ import 'package:real_estate_secure_backend/src/app.dart';
 import 'package:real_estate_secure_backend/src/config.dart';
 
 Future<void> main(List<String> args) async {
-  dotenv.load();
-  final config = AppConfig.fromEnv(dotenv.env);
+  final env = dotenv.DotEnv(includePlatformEnvironment: true)..load();
+  final config = AppConfig.fromEnv((key) => env[key]);
 
   _configureLogging(config.logLevel);
   final logger = Logger('real_estate_secure_backend');

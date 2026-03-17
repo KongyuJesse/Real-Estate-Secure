@@ -86,7 +86,10 @@ Router buildPropertiesRouter() {
 
     final pageRequest = PageRequest.fromQuery(query);
     final start = pageRequest.offset;
-    final end = (start + pageRequest.limit).clamp(0, filtered.length) as int;
+    var end = start + pageRequest.limit;
+    if (end > filtered.length) {
+      end = filtered.length;
+    }
     final pageItems = start >= filtered.length
         ? <PropertySummary>[]
         : filtered.sublist(start, end);

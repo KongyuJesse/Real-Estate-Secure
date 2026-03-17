@@ -1,5 +1,5 @@
 abstract class Entity {
-  const Entity(this.id);
+  const Entity({required this.id});
 
   final String id;
 }
