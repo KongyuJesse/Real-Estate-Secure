@@ -19,30 +19,326 @@ paths:
           description: Service is ready
         '503':
           description: Service is degraded
-  /subscriptions/plans:
-    get:
-      summary: List subscription plans
+  /auth/register:
+    post:
+      summary: Register a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegisterRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiOkResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /auth/login:
+    post:
+      summary: Login with credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
       responses:
         '200':
-          description: Active subscription plans
-  /currencies:
-    get:
-      summary: List currencies
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiOkResponse'
+        '401':
+          description: Invalid credentials or MFA required
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApiErrorResponse'
+                  - $ref: '#/components/schemas/MfaRequiredResponse'
+  /auth/refresh:
+    post:
+      summary: Refresh auth token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
       responses:
         '200':
-          description: Active currencies
-  /currencies/{code}/rates:
+          description: Token refreshed
+  /auth/logout:
+    post:
+      summary: Logout
+      responses:
+        '200':
+          description: Logged out
+  /auth/forgot-password:
+    post:
+      summary: Request password reset
+      responses:
+        '200':
+          description: Reset initiated
+  /users/contact-verification/session:
+    post:
+      summary: Start Sumsub contact verification
+      responses:
+        '201':
+          description: Sumsub contact verification session created
+  /users/contact-verification/refresh:
+    post:
+      summary: Refresh Sumsub contact verification status
+      responses:
+        '200':
+          description: Contact verification status refreshed
+  /auth/reset-password:
+    post:
+      summary: Reset password
+      responses:
+        '200':
+          description: Password reset
+  /auth/2fa/enable:
+    post:
+      summary: Enable two-factor authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 2FA secret issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaEnableResponse'
+  /auth/2fa/verify:
+    post:
+      summary: Verify two-factor token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaVerifyRequest'
+      responses:
+        '200':
+          description: 2FA verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiOkResponse'
+  /auth/biometric/register:
+    post:
+      summary: Register biometric credential
+      responses:
+        '200':
+          description: Biometric registered
+  /auth/biometric/verify:
+    post:
+      summary: Verify biometric credential
+      responses:
+        '200':
+          description: Biometric verified
+
+  /users/profile:
     get:
-      summary: List exchange rates for a base currency
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile data
+    put:
+      summary: Update current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile updated
+  /users:
+    get:
+      summary: List users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Users
+  /users/tasks:
+    get:
+      summary: Get actionable tasks for the current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Role-based task feed
+  /users/roles:
+    get:
+      summary: List current user's roles
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User roles
+    post:
+      summary: Add a self-service role for the current user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+                  enum: [buyer, seller]
+                make_primary:
+                  type: boolean
+      responses:
+        '201':
+          description: Role added
+  /users/roles/primary:
+    put:
+      summary: Set the primary role for the current user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+      responses:
+        '200':
+          description: Primary role updated
+  /users/{id}:
+    get:
+      summary: Get user by id
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
-          name: code
+          name: id
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Exchange rates
+          description: User details
+  /users/{id}/listings:
+    get:
+      summary: List a user's listings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Listings
+  /users/{id}/transactions:
+    get:
+      summary: List a user's transactions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Transactions
+  /users/{id}/reviews:
+    get:
+      summary: List a user's reviews
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Reviews
+  /users/kyc/upload:
+    post:
+      summary: Upload KYC documents
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [document_type, document_number, issuing_country, issue_date, first_name, last_name, date_of_birth, front_image_base64, front_image_name]
+              properties:
+                document_type:
+                  type: string
+                document_number:
+                  type: string
+                issuing_country:
+                  type: string
+                issue_date:
+                  type: string
+                  format: date
+                expiry_date:
+                  type: string
+                  format: date
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                date_of_birth:
+                  type: string
+                  format: date
+                front_image_base64:
+                  type: string
+                front_image_name:
+                  type: string
+                back_image_base64:
+                  type: string
+                back_image_name:
+                  type: string
+                portrait_base64:
+                  type: string
+                portrait_name:
+                  type: string
+      responses:
+        '201':
+          description: KYC submitted
+  /users/kyc/status:
+    get:
+      summary: Get KYC status
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: KYC status
+  /users/preferences:
+    put:
+      summary: Update user preferences
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Preferences updated
+  /users/account:
+    delete:
+      summary: Delete user account
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Account deleted
+
   /properties:
     get:
       summary: List active properties
@@ -86,3 +382,2128 @@ paths:
       responses:
         '200':
           description: Property summaries
+    post:
+      summary: Create property listing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyCreateRequest'
+      responses:
+        '201':
+          description: Property created
+  /properties/search:
+    get:
+      summary: Search properties
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+  /properties/map:
+    get:
+      summary: List map points for properties
+      responses:
+        '200':
+          description: Map points
+  /properties/{id}:
+    get:
+      summary: Get property details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Property details
+    put:
+      summary: Update property
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Property updated
+    delete:
+      summary: Delete property
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Property deleted
+  /properties/{id}/status:
+    get:
+      summary: Refresh and return property admission status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Property admission state
+  /properties/{id}/documents:
+    post:
+      summary: Upload property document and refresh sale admission state
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - document_type
+                - document_number
+                - document_title
+                - issuing_authority
+                - issue_date
+                - file_base64
+                - file_name
+              properties:
+                document_type:
+                  type: string
+                  enum:
+                    - land_title
+                    - survey_plan
+                    - tax_clearance
+                    - non_encumbrance
+                    - sale_agreement
+                    - building_permit
+                    - certificate_of_habitation
+                    - valuation_report
+                    - certificate_of_property
+                    - urbanism_certificate
+                    - accessibility_certificate
+                    - municipal_certificate
+                    - cadastral_signed_plan
+                    - site_visit_report
+                    - partition_record
+                document_number:
+                  type: string
+                document_title:
+                  type: string
+                issuing_authority:
+                  type: string
+                issue_date:
+                  type: string
+                  format: date-time
+                expiry_date:
+                  type: string
+                  format: date-time
+                file_base64:
+                  type: string
+                file_name:
+                  type: string
+                mime_type:
+                  type: string
+                access_level:
+                  type: string
+                is_public:
+                  type: boolean
+                watermark_text:
+                  type: string
+                original_seen_at:
+                  type: string
+                  format: date-time
+                certified_copy_verified:
+                  type: boolean
+                seen_at_location:
+                  type: string
+      responses:
+        '201':
+          description: Document uploaded
+
+  /transactions:
+    get:
+      summary: List user transactions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Transactions
+  /transactions/{id}:
+    get:
+      summary: Get transaction details
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transaction details
+  /transactions/initiate:
+    post:
+      summary: Initiate transaction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionInitiateRequest'
+      responses:
+        '201':
+          description: Transaction initiated
+  /transactions/{id}/deposit:
+    post:
+      summary: Record escrow deposit
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionAmountRequest'
+      responses:
+        '200':
+          description: Deposit recorded
+        '409':
+          description: Idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                idempotency_conflict:
+                  value:
+                    status: error
+                    error:
+                      message: Idempotency key already used with different payload.
+                      code: IDEMPOTENCY_CONFLICT
+                    request_id: req_01HZXPKD7R2Y
+  /transactions/{id}/lawyer:
+    post:
+      summary: Assign lawyer
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lawyer assigned
+  /transactions/{id}/notary:
+    post:
+      summary: Assign notary
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notary_id]
+              properties:
+                notary_id:
+                  type: string
+      responses:
+        '200':
+          description: Notary assigned
+  /transactions/{id}/closing-stage:
+    post:
+      summary: Record a sale closing stage in the notary-led evidence workflow
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stage]
+              properties:
+                stage:
+                  type: string
+                  enum:
+                    - commercially_closed
+                    - notarial_deed_signed
+                    - mutation_filed
+                    - title_transfer_confirmed
+      responses:
+        '200':
+          description: Closing stage updated
+  /transactions/{id}/inspect:
+    post:
+      summary: Start inspection period
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Inspection started
+  /transactions/{id}/approve:
+    post:
+      summary: Approve legal review
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Approved
+  /transactions/{id}/release:
+    post:
+      summary: Release escrow funds
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionIdempotencyRequest'
+      responses:
+        '200':
+          description: Funds released
+        '409':
+          description: Idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                idempotency_conflict:
+                  value:
+                    status: error
+                    error:
+                      message: Idempotency key already used with different payload.
+                      code: IDEMPOTENCY_CONFLICT
+                    request_id: req_01HZXPKD7R2Y
+  /transactions/{id}/hold:
+    post:
+      summary: Place escrow funds on hold
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionAmountRequest'
+      responses:
+        '200':
+          description: Funds held
+        '409':
+          description: Idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                idempotency_conflict:
+                  value:
+                    status: error
+                    error:
+                      message: Idempotency key already used with different payload.
+                      code: IDEMPOTENCY_CONFLICT
+                    request_id: req_01HZXPKD7R2Y
+  /transactions/{id}/refund:
+    post:
+      summary: Refund escrow funds
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionAmountRequest'
+      responses:
+        '200':
+          description: Refund issued
+        '409':
+          description: Idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                idempotency_conflict:
+                  value:
+                    status: error
+                    error:
+                      message: Idempotency key already used with different payload.
+                      code: IDEMPOTENCY_CONFLICT
+                    request_id: req_01HZXPKD7R2Y
+  /transactions/{id}/documents:
+    post:
+      summary: Upload transaction evidence document
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [document_type, file_base64, file_name]
+              properties:
+                document_type:
+                  type: string
+                  enum:
+                    - notary_deed
+                    - tax_registration_receipt
+                    - registration_receipt
+                    - title_transfer_receipt
+                    - title_mutation_receipt
+                    - updated_title_evidence
+                    - payment_receipt
+                    - power_of_attorney
+                    - stamped_filing_receipt
+                    - hearing_notice
+                    - clerk_issued_document
+                    - certified_judgment_copy
+                    - certificate_of_non_appeal
+                    - ministerial_non_objection
+                    - site_visit_report
+                    - partition_record
+                    - cadastral_signed_plan
+                    - commission_minutes
+                    - other
+                file_base64:
+                  type: string
+                file_name:
+                  type: string
+                mime_type:
+                  type: string
+                notes:
+                  type: string
+                original_seen_at:
+                  type: string
+                  format: date-time
+                certified_copy_verified:
+                  type: boolean
+                seen_at_location:
+                  type: string
+                issuing_office:
+                  type: string
+      responses:
+        '201':
+          description: Transaction document uploaded
+  /transactions/{id}/offline-steps:
+    get:
+      summary: List offline physical workflow steps for a transaction
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Offline steps
+    post:
+      summary: Create an offline physical workflow step
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [step_type]
+              properties:
+                step_type:
+                  type: string
+                  enum:
+                    - notary_office_step
+                    - municipal_certificate_step
+                    - tax_registration_step
+                    - mindcaf_filing_step
+                    - court_case_step
+                    - justice_execution_step
+                    - commission_visit_step
+                    - cadastral_validation_step
+                physical_status:
+                  type: string
+                  enum:
+                    - awaiting_notary_appointment
+                    - awaiting_municipal_certificate
+                    - awaiting_registration_receipt
+                    - awaiting_mindcaf_filing
+                    - awaiting_court_hearing
+                    - awaiting_final_judgment
+                    - awaiting_non_objection
+                    - awaiting_commission_visit
+                    - in_review
+                    - completed
+                    - blocked
+                    - cancelled
+                expected_office:
+                  type: string
+                assigned_role:
+                  type: string
+                filing_date:
+                  type: string
+                  format: date-time
+                scheduled_at:
+                  type: string
+                  format: date-time
+                next_follow_up_date:
+                  type: string
+                  format: date-time
+                original_required:
+                  type: boolean
+                oversight_required:
+                  type: boolean
+                notes:
+                  type: string
+                metadata:
+                  type: object
+      responses:
+        '201':
+          description: Offline step created
+  /transactions/{id}/offline-steps/{stepId}/status:
+    post:
+      summary: Update status for an offline physical workflow step
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [physical_status]
+              properties:
+                physical_status:
+                  type: string
+                  enum:
+                    - awaiting_notary_appointment
+                    - awaiting_municipal_certificate
+                    - awaiting_registration_receipt
+                    - awaiting_mindcaf_filing
+                    - awaiting_court_hearing
+                    - awaiting_final_judgment
+                    - awaiting_non_objection
+                    - awaiting_commission_visit
+                    - in_review
+                    - completed
+                    - blocked
+                    - cancelled
+                filing_date:
+                  type: string
+                  format: date-time
+                scheduled_at:
+                  type: string
+                  format: date-time
+                next_follow_up_date:
+                  type: string
+                  format: date-time
+                delay_reason:
+                  type: string
+                notes:
+                  type: string
+                metadata:
+                  type: object
+      responses:
+        '200':
+          description: Offline step updated
+  /transactions/{id}/legal-cases:
+    get:
+      summary: List assisted legal cases for a transaction
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Legal cases
+    post:
+      summary: Create an assisted legal case for a transaction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [case_type]
+              properties:
+                case_type:
+                  type: string
+                  enum:
+                    - administrative_appeal
+                    - administrative_litigation
+                    - justice_execution
+                    - succession_case
+                    - judgment_enforcement
+                    - domain_national_allocation
+                    - old_title_regularization
+                    - foreign_party_authorization
+                status:
+                  type: string
+                  enum:
+                    - pending_filing
+                    - active
+                    - awaiting_decision
+                    - resolved
+                    - closed
+                    - blocked
+                freezes_automation:
+                  type: boolean
+                requires_admin_oversight:
+                  type: boolean
+                expected_office:
+                  type: string
+                reference_number:
+                  type: string
+                court_name:
+                  type: string
+                filing_date:
+                  type: string
+                  format: date-time
+                next_follow_up_date:
+                  type: string
+                  format: date-time
+                final_decision_date:
+                  type: string
+                  format: date-time
+                delay_reason:
+                  type: string
+                notes:
+                  type: string
+                metadata:
+                  type: object
+      responses:
+        '201':
+          description: Legal case created
+  /transactions/{id}/legal-cases/{caseId}/status:
+    post:
+      summary: Update an assisted legal case status
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - pending_filing
+                    - active
+                    - awaiting_decision
+                    - resolved
+                    - closed
+                    - blocked
+                filing_date:
+                  type: string
+                  format: date-time
+                next_follow_up_date:
+                  type: string
+                  format: date-time
+                final_decision_date:
+                  type: string
+                  format: date-time
+                reference_number:
+                  type: string
+                court_name:
+                  type: string
+                delay_reason:
+                  type: string
+                notes:
+                  type: string
+                metadata:
+                  type: object
+      responses:
+        '200':
+          description: Legal case updated
+  /transactions/{id}/declarations:
+    get:
+      summary: List external settlement declarations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Settlement declarations
+    post:
+      summary: Declare an external or hybrid settlement event
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [settlement_mode, payment_channel, amount]
+              properties:
+                settlement_mode:
+                  type: string
+                  enum: [off_platform, hybrid]
+                payment_channel:
+                  type: string
+                  enum: [mobile_money, bank_transfer, cash, cheque, notary, other]
+                amount:
+                  type: number
+                currency:
+                  type: string
+                payment_reference:
+                  type: string
+                provider_name:
+                  type: string
+                occurred_at:
+                  type: string
+                  format: date-time
+                evidence:
+                  type: object
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Settlement declaration recorded
+  /transactions/{id}/declarations/{declarationId}/confirm:
+    post:
+      summary: Confirm or reject a declared settlement event
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                decision:
+                  type: string
+                  enum: [confirmed, rejected]
+                note:
+                  type: string
+      responses:
+        '200':
+          description: Declaration confirmation recorded
+  /transactions/{id}/declarations/{declarationId}/review:
+    post:
+      summary: Lawyer or admin review for a settlement declaration
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [confirmed, rejected, flagged]
+                review_notes:
+                  type: string
+      responses:
+        '200':
+          description: Declaration reviewed
+  /transactions/{id}/dispute:
+    post:
+      summary: Mark transaction as disputed
+      security:
+        - bearerAuth: []
+      responses:
+        '202':
+          description: Dispute opened
+  /transactions/{id}/cancel:
+    post:
+      summary: Cancel transaction
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Transaction cancelled
+  /transactions/{id}/timeline:
+    get:
+      summary: Get transaction timeline
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Timeline
+  /transactions/{id}/compliance:
+    get:
+      summary: Get transaction legal compliance profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Compliance profile
+
+  /lawyers:
+    get:
+      summary: List verified lawyers
+      responses:
+        '200':
+          description: Lawyers
+  /lawyers/{id}:
+    get:
+      summary: Get lawyer profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lawyer profile
+  /lawyers/{id}/reviews:
+    get:
+      summary: List lawyer reviews
+      responses:
+        '200':
+          description: Reviews
+  /lawyers/{id}/hire:
+    post:
+      summary: Hire lawyer
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Lawyer hired
+  /lawyers/pending:
+    get:
+      summary: List pending document reviews
+      responses:
+        '200':
+          description: Pending reviews
+  /lawyers/verify/{documentId}:
+    post:
+      summary: Verify document
+      responses:
+        '200':
+          description: Document verified
+  /lawyers/reject/{documentId}:
+    post:
+      summary: Reject document
+      responses:
+        '200':
+          description: Document rejected
+  /lawyers/review/{transactionId}:
+    post:
+      summary: Submit legal review
+      responses:
+        '200':
+          description: Review submitted
+
+  /notaries:
+    get:
+      summary: List verified notaries
+      responses:
+        '200':
+          description: Notaries
+  /notaries/{id}:
+    get:
+      summary: Get notary profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notary profile
+  /notaries/{id}/hire:
+    post:
+      summary: Hire or assign a notary to a transaction
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Notary assigned
+
+  /services/catalog:
+    get:
+      summary: List monetized platform services
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Service catalog
+  /services/orders:
+    get:
+      summary: List current user's service orders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Service orders
+    post:
+      summary: Create a service order
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [service_code]
+              properties:
+                service_code:
+                  type: string
+                property_id:
+                  type: string
+                transaction_id:
+                  type: string
+                requested_metadata:
+                  type: object
+      responses:
+        '201':
+          description: Service order created
+
+  /messaging/conversations:
+    get:
+      summary: List conversations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Conversations
+    post:
+      summary: Create conversation
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Conversation created
+  /messaging/conversations/{id}/messages:
+    get:
+      summary: List conversation messages
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Messages
+    post:
+      summary: Send message
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Message sent
+  /messaging/messages/{id}:
+    put:
+      summary: Edit message
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Message updated
+    delete:
+      summary: Delete message
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Message deleted
+  /messaging/conversations/{id}/read:
+    post:
+      summary: Mark conversation as read
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Marked read
+  /messaging/conversations/{id}/archive:
+    post:
+      summary: Archive conversation
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Archived
+
+  /notifications:
+    get:
+      summary: List in-app notifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [unread]
+          description: Provide `unread` to return only unread items.
+      responses:
+        '200':
+          description: In-app notifications
+  /notifications/unread-count:
+    get:
+      summary: Get unread notification count
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Unread notification count
+  /notifications/read-all:
+    post:
+      summary: Mark all in-app notifications as read
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notifications marked as read
+  /notifications/{id}/read:
+    post:
+      summary: Mark a single in-app notification as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification marked as read
+  /notifications/devices:
+    get:
+      summary: List registered push devices
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Registered push devices
+    post:
+      summary: Register or refresh a push device token
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [device_token, platform]
+              properties:
+                device_token:
+                  type: string
+                platform:
+                  type: string
+                  enum: [android, ios, web, desktop]
+                push_provider:
+                  type: string
+                  example: generic
+                device_name:
+                  type: string
+                locale:
+                  type: string
+                  enum: [en, fr]
+                metadata:
+                  type: object
+      responses:
+        '201':
+          description: Push device registered
+  /notifications/devices/{id}:
+    delete:
+      summary: Remove a registered push device
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Push device removed
+
+  /payments/methods:
+    get:
+      summary: List payment methods
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payment methods
+    post:
+      summary: Add payment method
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Payment method created
+  /payments/methods/{id}:
+    delete:
+      summary: Remove payment method
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payment method removed
+  /payments/history:
+    get:
+      summary: Get payment history
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payment history
+  /payments/withdraw:
+    post:
+      summary: Withdraw funds
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount_xaf]
+              properties:
+                amount_xaf:
+                  type: number
+                payment_method_id:
+                  type: integer
+                currency:
+                  type: string
+                  enum: [XAF]
+                reason:
+                  type: string
+                metadata:
+                  type: object
+      responses:
+        '202':
+          description: Withdrawal request accepted
+
+  /subscriptions/plans:
+    get:
+      summary: List subscription plans
+      responses:
+        '200':
+          description: Active subscription plans
+  /subscriptions:
+    post:
+      summary: Create subscription
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Subscription created
+  /subscriptions/current:
+    get:
+      summary: Get current subscription
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current subscription
+  /subscriptions/cancel:
+    put:
+      summary: Cancel subscription
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Subscription cancelled
+  /subscriptions/upgrade:
+    put:
+      summary: Upgrade subscription
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Subscription upgraded
+
+  /disputes:
+    get:
+      summary: List disputes
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Disputes
+    post:
+      summary: Create dispute
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Dispute created
+  /disputes/{id}:
+    get:
+      summary: Get dispute
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dispute
+  /disputes/{id}/messages:
+    get:
+      summary: List dispute messages
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dispute messages
+    post:
+      summary: Post dispute message
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Message created
+
+  /currencies:
+    get:
+      summary: List currencies
+      responses:
+        '200':
+          description: Active currencies
+  /currencies/rates:
+    get:
+      summary: List exchange rates
+      parameters:
+        - in: query
+          name: base
+          schema:
+            type: string
+        - in: query
+          name: quote
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Exchange rates
+  /currencies/convert:
+    get:
+      summary: Convert between currencies
+      parameters:
+        - in: query
+          name: amount
+          required: true
+          schema:
+            type: number
+            format: double
+        - in: query
+          name: base
+          schema:
+            type: string
+            default: XAF
+        - in: query
+          name: quote
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Converted amount
+
+  /analytics/property-view:
+    post:
+      summary: Track property view
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsPropertyView'
+      responses:
+        '200':
+          description: Tracked
+  /analytics/search:
+    post:
+      summary: Track search analytics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsSearchEvent'
+      responses:
+        '200':
+          description: Tracked
+
+  /admin/properties/pending:
+    get:
+      summary: List pending property verifications
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Pending properties
+  /admin/properties/{id}/approve:
+    post:
+      summary: Approve property verification
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Property approved
+  /admin/properties/{id}/reject:
+    post:
+      summary: Reject property verification
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Property rejected
+  /admin/kyc/pending:
+    get:
+      summary: List pending KYC verifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Pending KYC
+  /admin/kyc/reviews:
+    get:
+      summary: List KYC manual review tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: priority
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Review tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycReviewTaskListResponse'
+  /admin/kyc/reviews/{id}/assign:
+    post:
+      summary: Assign KYC review task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KycReviewAssignRequest'
+      responses:
+        '200':
+          description: Assigned
+  /admin/kyc/reviews/{id}/resolve:
+    post:
+      summary: Resolve KYC review task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KycReviewResolveRequest'
+      responses:
+        '200':
+          description: Resolved
+  /admin/kyc/dashboard:
+    get:
+      summary: KYC dashboard summary
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: days
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: KYC dashboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycDashboardResponse'
+  /admin/kyc/{id}/approve:
+    post:
+      summary: Approve KYC document
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: KYC approved
+  /admin/kyc/{id}/reject:
+    post:
+      summary: Reject KYC document
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: KYC rejected
+  /admin/escrow/{id}/approve:
+    post:
+      summary: Approve escrow release (four-eyes)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Approval recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiOkResponse'
+  /admin/escrow/{id}/approvals:
+    get:
+      summary: List escrow release approvals
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Approval list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiOkResponse'
+  /admin/escrow/reconciliation:
+    get:
+      summary: List escrow reconciliation reports
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Reconciliation reports
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconciliationReportListResponse'
+  /admin/escrow/reconciliation/dashboard:
+    get:
+      summary: Reconciliation dashboard summary
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: days
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconciliationDashboardResponse'
+  /admin/fraud/events:
+    get:
+      summary: List fraud events
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: severity
+          schema:
+            type: string
+        - in: query
+          name: event_type
+          schema:
+            type: string
+        - in: query
+          name: reference_type
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Fraud events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FraudEventListResponse'
+  /admin/fraud/events/dashboard:
+    get:
+      summary: Fraud events dashboard summary
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: days
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FraudDashboardResponse'
+  /webhooks/kyc:
+    post:
+      summary: KYC provider webhook
+      security:
+        - webhookSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KycWebhookEvent'
+      responses:
+        '200':
+          description: Accepted
+  /webhooks/email:
+    post:
+      summary: Email provider webhook
+      security:
+        - webhookSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationWebhookEvent'
+      responses:
+        '200':
+          description: Accepted
+  /webhooks/sms:
+    post:
+      summary: SMS provider webhook
+      security:
+        - webhookSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationWebhookEvent'
+      responses:
+        '200':
+          description: Accepted
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    webhookSecret:
+      type: apiKey
+      in: header
+      name: X-Webhook-Secret
+  schemas:
+    ApiOkResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          nullable: true
+        meta:
+          type: object
+        request_id:
+          type: string
+    PageMeta:
+      type: object
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+    ReconciliationReport:
+      type: object
+      properties:
+        id:
+          type: integer
+        run_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+        mismatched_accounts:
+          type: integer
+        mismatch_details:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+    FraudEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        event_type:
+          type: string
+        severity:
+          type: string
+        reference_type:
+          type: string
+        reference_id:
+          type: integer
+        payload:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+    ReconciliationReportListResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiOkResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReconciliationReport'
+            meta:
+              $ref: '#/components/schemas/PageMeta'
+    FraudEventListResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiOkResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/FraudEvent'
+            meta:
+              $ref: '#/components/schemas/PageMeta'
+    ReconciliationDashboardSeriesItem:
+      type: object
+      properties:
+        day:
+          type: string
+          format: date-time
+        status:
+          type: string
+        count:
+          type: integer
+    ReconciliationDashboardTotal:
+      type: object
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+    ReconciliationDashboardResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiOkResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                window_days:
+                  type: integer
+                totals:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ReconciliationDashboardTotal'
+                series:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ReconciliationDashboardSeriesItem'
+    FraudDashboardSeriesItem:
+      type: object
+      properties:
+        day:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        count:
+          type: integer
+    FraudDashboardTotal:
+      type: object
+      properties:
+        severity:
+          type: string
+        count:
+          type: integer
+    FraudDashboardResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiOkResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                window_days:
+                  type: integer
+                totals:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/FraudDashboardTotal'
+                series:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/FraudDashboardSeriesItem'
+    KycDashboardStatusItem:
+      type: object
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+    KycDashboardPriorityItem:
+      type: object
+      properties:
+        priority:
+          type: string
+        count:
+          type: integer
+    KycDashboardResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiOkResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                window_days:
+                  type: integer
+                pending_documents:
+                  type: integer
+                review_status:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/KycDashboardStatusItem'
+                review_priority:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/KycDashboardPriorityItem'
+                overdue_reviews:
+                  type: integer
+    KycReviewTask:
+      type: object
+      properties:
+        id:
+          type: integer
+        document_id:
+          type: integer
+        status:
+          type: string
+        priority:
+          type: string
+        assigned_to:
+          type: integer
+        sla_due_at:
+          type: string
+          format: date-time
+        escalation_level:
+          type: integer
+        escalated_at:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        flags:
+          type: object
+        risk_score:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    KycReviewTaskListResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiOkResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/KycReviewTask'
+            meta:
+              $ref: '#/components/schemas/PageMeta'
+    KycReviewAssignRequest:
+      type: object
+      required: [reviewer_id]
+      properties:
+        reviewer_id:
+          type: string
+    KycReviewResolveRequest:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [verified, rejected]
+        reason:
+          type: string
+    ApiErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            code:
+              type: string
+            details:
+              type: object
+        request_id:
+          type: string
+    AuthRegisterRequest:
+      type: object
+      required: [email, password, phone_number, first_name, last_name, date_of_birth]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        phone_number:
+          type: string
+        phone_country_code:
+          type: string
+          example: "+237"
+        first_name:
+          type: string
+        last_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+    AuthLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        two_factor_code:
+          type: string
+          description: TOTP code when MFA is required.
+
+    MfaRequiredResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          type: object
+          properties:
+            mfa_required:
+              type: boolean
+            mfa_token:
+              type: string
+            expires_in:
+              type: integer
+        request_id:
+          type: string
+
+    MfaEnableResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          type: object
+          properties:
+            secret:
+              type: string
+            otpauth_url:
+              type: string
+        request_id:
+          type: string
+
+    MfaVerifyRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+        mfa_token:
+          type: string
+          format: password
+    AuthTokens:
+      type: object
+      properties:
+        token:
+          type: string
+        refresh_token:
+          type: string
+        expires_in:
+          type: integer
+        user:
+          $ref: '#/components/schemas/UserProfile'
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        phone_number:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+    PropertySummary:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        price_xaf:
+          type: number
+        type:
+          type: string
+        listing_type:
+          type: string
+        region:
+          type: string
+        city:
+          type: string
+        status:
+          type: string
+        verification_status:
+          type: string
+        risk_lane:
+          type: string
+        admission_status:
+          type: string
+        inventory_type:
+          type: string
+        is_featured:
+          type: boolean
+    PropertyCreateRequest:
+      type: object
+      required: [property_type, listing_type, title, description, price, region, department, city, latitude, longitude]
+      properties:
+        property_type:
+          type: string
+        listing_type:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+        region:
+          type: string
+        department:
+          type: string
+        city:
+          type: string
+        district:
+          type: string
+        neighborhood:
+          type: string
+        street_address:
+          type: string
+        landmark:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        inventory_type:
+          type: string
+          description: Required for sale listings.
+          enum:
+            - titled_private
+            - untitled_customary
+            - domain_national
+            - succession_estate
+            - judgment_enforcement
+            - old_title_regularization
+            - other
+        declared_encumbrance:
+          type: boolean
+        declared_dispute:
+          type: boolean
+        foreign_party_expected:
+          type: boolean
+        municipal_certificate_required:
+          type: boolean
+        old_title_risk:
+          type: boolean
+        court_linked:
+          type: boolean
+        ministry_filing_required:
+          type: boolean
+    TransactionInitiateRequest:
+      type: object
+      required: [property_id]
+      properties:
+        property_id:
+          type: string
+        settlement_mode:
+          type: string
+          enum: [platform_escrow, hybrid, off_platform]
+        foreign_party_involved:
+          type: boolean
+        corporate_party_involved:
+          type: boolean
+        succession_case:
+          type: boolean
+        power_of_attorney_used:
+          type: boolean
+        encumbrance_detected:
+          type: boolean
+        judgment_or_dispute_case:
+          type: boolean
+        administrative_appeal_case:
+          type: boolean
+        administrative_litigation_case:
+          type: boolean
+        justice_execution_case:
+          type: boolean
+        domain_national_allocation_case:
+          type: boolean
+        old_title_regularization_case:
+          type: boolean
+    TransactionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        property_id:
+          type: string
+        buyer_id:
+          type: string
+        seller_id:
+          type: string
+        amount_xaf:
+          type: number
+        status:
+          type: string
+        settlement_mode:
+          type: string
+        closing_stage:
+          type: string
+          enum:
+            - pre_closing
+            - commercially_closed
+            - notarial_deed_signed
+            - mutation_filed
+            - title_transfer_confirmed
+        created_at:
+          type: string
+          format: date-time
+    TransactionAmountRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+        idempotency_key:
+          type: string
+          description: Idempotency key for escrow operations.
+    TransactionIdempotencyRequest:
+      type: object
+      properties:
+        idempotency_key:
+          type: string
+    AnalyticsPropertyView:
+      type: object
+      required: [property_id]
+      properties:
+        property_id:
+          type: string
+        user_id:
+          type: string
+        session_id:
+          type: string
+        ip_address:
+          type: string
+        user_agent:
+          type: string
+        duration_seconds:
+          type: integer
+    AnalyticsSearchEvent:
+      type: object
+      required: [result_count, filters_applied]
+      properties:
+        user_id:
+          type: string
+        session_id:
+          type: string
+        search_query:
+          type: string
+        filters_applied:
+          type: object
+        result_count:
+          type: integer
+        clicked_property_id:
+          type: string
+        click_position:
+          type: integer
+    KycWebhookEvent:
+      type: object
+      required: [document_id, status]
+      properties:
+        document_id:
+          type: integer
+        status:
+          type: string
+          enum: [pending, verified, rejected]
+        reason:
+          type: string
+    NotificationWebhookEvent:
+      type: object
+      properties:
+        notification_id:
+          type: integer
+        status:
+          type: string
+          enum: [sent, delivered, failed]
+        error:
+          type: string

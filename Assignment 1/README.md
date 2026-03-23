@@ -1,33 +1,170 @@
-# Assignment 1: `processList` Kotlin Console Project
+# Assignment 1: Number Processing Feature Showcase
 
-This project is a Kotlin console application built around a reusable `processList` function.
+This assignment started as a simple `processList` exercise and has been expanded into a richer number-processing console project. It still demonstrates filtering a list with a predicate, but it now also showcases the broader Kotlin language features you were asked to practice.
 
-## Core Function
+## What The Program Does
+
+The program creates an immutable batch of numbers, transforms the values, filters them with reusable rules, and produces a readable report.
+
+Sample flow:
+
+1. create a `NumberBatch` with `vararg` inputs
+2. square each number with a higher-order transformation
+3. keep only values above a minimum threshold
+4. evaluate multiple reusable rules
+5. build a text report from the results
+
+## Kotlin Features Implemented
+
+- functions and expression bodies
+- default and named arguments
+- varargs
+- infix and extension functions
+- immutable collections
+- lambdas and higher-order functions
+- `map`, `filter`, and `fold`
+- classes, inheritance, interfaces, data classes, and sealed classes
+
+## Design Walkthrough
+
+### 1. Functions and expression bodies
+
+Several functions use Kotlin expression bodies for concise logic:
 
 ```kotlin
-fun processList(
-    numbers: List<Int>,
-    predicate: (Int) -> Boolean
+fun processList(numbers: List<Int>, predicate: (Int) -> Boolean): List<Int> =
+    numbers.filter(predicate)
+
+fun Int.squared(): Int = this * this
+```
+
+### 2. Default and named arguments
+
+The project uses default values so functions stay flexible:
+
+```kotlin
+fun numberBatch(vararg values: Int, name: String = "Numbers"): NumberBatch
+
+fun prepareValues(
+    values: List<Int>,
+    minimumValue: Int = 0,
+    transformer: (Int) -> Int = { it },
 ): List<Int>
 ```
 
-Example usage:
+Named arguments are used in the codebase, for example:
 
 ```kotlin
-val nums = listOf(1, 2, 3, 4, 5, 6)
-val even = processList(nums) { it % 2 == 0 }
-println(even) // [2, 4, 6]
+val batch = numberBatch(1, 2, 3, 4, name = "Quarter Scores")
 ```
 
-## What This Project Contains
+### 3. Varargs
 
-- a standalone Kotlin/JVM console project
-- a `processList` implementation
-- a `main` function with sample outputs
-- unit tests for common cases
-- a Gradle wrapper so the project can run without installing Gradle globally
+`numberBatch` accepts any number of integers:
 
-## Project Structure
+```kotlin
+val batch = numberBatch(1, 2, 3, 4, 5, 6, name = "Quarter Scores")
+```
+
+### 4. Infix and extension functions
+
+The assignment includes both:
+
+```kotlin
+infix fun Int.isMultipleOf(divisor: Int): Boolean
+fun List<Int>.sumWithFold(): Int
+fun BatchInsight.describe(): String
+```
+
+Example:
+
+```kotlin
+4 isMultipleOf 2
+```
+
+### 5. Immutable collections
+
+The project relies on Kotlin immutable collection types such as `List` and arrays converted with `toList()`. The data class stores values in immutable lists instead of mutable ones.
+
+### 6. Lambdas and higher-order functions
+
+`processList`, `prepareValues`, and `renderLines` all accept function values:
+
+```kotlin
+fun processList(numbers: List<Int>, predicate: (Int) -> Boolean): List<Int>
+fun <T> List<T>.renderLines(transform: (T) -> String): String
+```
+
+The program passes lambdas and function references like `Int::squared`.
+
+### 7. `map`, `filter`, and `fold`
+
+These collection operators are central to the solution:
+
+- `map` transforms numbers before analysis
+- `filter` applies thresholds and reusable rules
+- `fold` calculates totals through `sumWithFold`
+
+### 8. Classes, inheritance, interfaces, data classes, and sealed classes
+
+The object model is intentionally varied:
+
+- `NumberCollection` is an open base class
+- `Titled` and `NumberRule` are interfaces
+- `NumberBatch` and `PredicateRule` are data classes
+- `BatchInsight` is a sealed class with typed result variants
+
+## Important Types And Functions
+
+### `NumberBatch`
+
+Represents a named immutable set of numbers.
+
+```kotlin
+data class NumberBatch(
+    override val name: String,
+    val values: List<Int>,
+) : NumberCollection(name), Titled
+```
+
+### `PredicateRule`
+
+Wraps a label and a predicate lambda into a reusable rule object.
+
+### `BatchInsight`
+
+Represents either:
+
+- a successful rule match with values, total, and average
+- a no-match result
+
+### `buildBatchReport`
+
+The high-level orchestration function:
+
+```kotlin
+fun buildBatchReport(
+    batch: NumberBatch,
+    minimumValue: Int = 0,
+    transformer: (Int) -> Int = { it },
+    vararg rules: NumberRule,
+): String
+```
+
+It prepares values, analyzes them with reusable rules, and formats the final output.
+
+## Example Output
+
+```text
+Number batch: Quarter Scores
+Prepared values: 4, 9, 16, 25, 36, 49, 64
+Prepared total: 203
+Even numbers -> values=4, 16, 36, 64, total=120, average=30.0
+Values above 20 -> values=25, 36, 49, 64, total=174, average=43.5
+Multiples of three -> values=9, 36, total=45, average=22.5
+```
+
+## File Structure
 
 ```text
 Assignment 1/
@@ -47,73 +184,7 @@ Assignment 1/
     `-- gradle-wrapper.properties
 ```
 
-## How the Program Works
-
-`processList` accepts two inputs:
-
-1. `numbers`: a list of integers
-2. `predicate`: a lambda that returns `true` for values that should be kept
-
-The function loops through the input list, checks every number with the lambda, and adds only the matching numbers to a new list.
-
-Example:
-
-- input list: `[1, 2, 3, 4, 5, 6]`
-- predicate: `{ it % 2 == 0 }`
-- output: `[2, 4, 6]`
-
-## Source Code
-
-Main implementation:
-
-```kotlin
-fun processList(
-    numbers: List<Int>,
-    predicate: (Int) -> Boolean,
-): List<Int> {
-    val filteredNumbers = mutableListOf<Int>()
-
-    for (number in numbers) {
-        if (predicate(number)) {
-            filteredNumbers += number
-        }
-    }
-
-    return filteredNumbers
-}
-```
-
-## Console Output Example
-
-When you run the program, the sample `main` function prints:
-
-```text
-Input numbers: [1, 2, 3, 4, 5, 6]
-Even numbers: [2, 4, 6]
-Numbers greater than 3: [4, 5, 6]
-Odd numbers: [1, 3, 5]
-```
-
-## User Guide
-
-### Prerequisites
-
-- Java JDK 24 installed
-- Windows PowerShell if you want to use `gradlew.bat`
-
-This project is configured with:
-
-- Gradle `8.14.4`
-- Kotlin Gradle plugin `2.2.21`
-
-That combination matches official compatibility guidance for Kotlin `2.2.21` with Gradle `8.14`, and Gradle `8.14.4` supports running on Java `24`.
-
-Sources:
-
-- https://kotlinlang.org/docs/gradle-configure-project.html
-- https://docs.gradle.org/8.14.4/release-notes.html
-
-### Run the program
+## How To Run
 
 From the `Assignment 1` folder:
 
@@ -121,78 +192,21 @@ From the `Assignment 1` folder:
 .\gradlew.bat run
 ```
 
-On Git Bash or other Unix-like shells:
-
-```bash
-./gradlew run
-```
-
-### Run the tests
+## How To Test
 
 ```powershell
 .\gradlew.bat test
 ```
 
-### Open in IntelliJ IDEA or Android Studio
-
-1. Open the `Assignment 1` folder as a project.
-2. Let Gradle sync the project.
-3. Run `Main.kt` to see the console output.
-4. Run `ProcessListTest.kt` to execute the unit tests.
-
-## How to Change the Predicate
-
-You can reuse `processList` with any condition you want.
-
-Keep only even numbers:
-
-```kotlin
-val even = processList(nums) { it % 2 == 0 }
-```
-
-Keep only odd numbers:
-
-```kotlin
-val odd = processList(nums) { it % 2 != 0 }
-```
-
-Keep numbers greater than 3:
-
-```kotlin
-val greaterThanThree = processList(nums) { it > 3 }
-```
-
-Keep numbers less than or equal to 4:
-
-```kotlin
-val small = processList(nums) { it <= 4 }
-```
-
 ## Test Coverage
 
-The tests currently verify:
+The test suite verifies:
 
-- filtering even numbers
-- filtering numbers greater than 3
-- behavior with an empty input list
-- behavior when no numbers match
+- filtering with the original `processList` idea
+- transformation and threshold handling
+- rule-based analysis with folded totals
+- report output when no values match a rule
 
 ## Summary
 
-This project satisfies the assignment by:
-
-- creating a Kotlin console project
-- implementing `processList(numbers, predicate)`
-- demonstrating the function in `main`
-- including tests
-- documenting the full project and usage in this README
-
-## Collaboration
-
-For changes in this folder, use a short-lived branch from `main`, for example `docs/assignment-1-readme-update` or `feat/assignment-1-improvement`.
-
-Before opening a pull request:
-
-- keep the change scoped to `Assignment 1/` whenever possible
-- run `.\gradlew.bat test`
-- open the pull request into `main`
+Assignment 1 is now more than a basic filter function. It is a complete Kotlin feature showcase built around number processing, with a stronger domain model, reusable rules, collection pipelines, and descriptive documentation.

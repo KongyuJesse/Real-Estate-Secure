@@ -34,6 +34,18 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  file_picker: ^10.3.3
+  flutter_secure_storage: ^9.2.4
+  flutter_idensic_mobile_sdk_plugin: ^1.41.2
+  google_maps_flutter: ^2.15.0
+  google_mobile_ads: ^6.0.0
+  image_picker: ^1.2.0
+  permission_handler: ^12.0.1
+  path: ^1.9.1
+  sqflite: ^2.4.2
+  solar_icons: ^0.0.5
+  url_launcher: ^6.3.2
+  geolocator: ^14.0.2
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +68,19 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/fonts/
+
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Variable.ttf
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Variable.ttf
+    - family: RobotoMono
+      fonts:
+        - asset: assets/fonts/RobotoMono-Variable.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

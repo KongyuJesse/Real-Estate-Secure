@@ -13,8 +13,10 @@ class CliTest {
     @Test
     fun `parses desktop and concepts commands`() {
         assertEquals(DesktopUiCommand, Cli.parse(arrayOf("ui")))
+        assertEquals(DesktopUiCommand, Cli.parse(arrayOf("studio")))
         assertEquals(ConceptsCommand, Cli.parse(arrayOf("concepts")))
         assertEquals(ConceptsCommand, Cli.parse(arrayOf("syntax")))
+        assertEquals(ConceptsCommand, Cli.parse(arrayOf("kotlin")))
     }
 
     @Test

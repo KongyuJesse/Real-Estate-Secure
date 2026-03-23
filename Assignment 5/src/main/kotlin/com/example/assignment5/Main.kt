@@ -20,6 +20,13 @@ open class Component(open val name: String)
 
 data class LogEntry(val source: String, val event: LogEvent)
 
+data class LogSummary(
+    val infoCount: Int = 0,
+    val errorCount: Int = 0,
+    val debugCount: Int = 0,
+    val totalCharacters: Int = 0,
+)
+
 sealed class LogEvent {
     data class Info(val message: String) : LogEvent()
     data class Error(val message: String) : LogEvent()
@@ -58,6 +65,9 @@ fun LogEntry.format(
     }
 }
 
+fun LogSummary.format(): String =
+    "Summary: info=$infoCount, error=$errorCount, debug=$debugCount, chars=$totalCharacters"
+
 fun logEntries(vararg entries: LogEntry): List<LogEntry> = entries.toList()
 
 fun Logger.logAll(vararg messages: String) {
@@ -72,27 +82,27 @@ fun List<LogEntry>.formatLines(
 fun selectErrors(entries: List<LogEntry>): List<LogEntry> =
     entries.filter { it.event is LogEvent.Error }
 
-fun buildSummary(entries: List<LogEntry>): String {
-    val counts = entries.fold(
-        mapOf(
-            "INFO" to 0,
-            "ERROR" to 0,
-            "DEBUG" to 0,
-        ),
-    ) { acc, entry ->
-        val key = entry.event.label()
-        acc + (key to (acc.getValue(key) + 1))
+fun summarizeEntries(entries: List<LogEntry>): LogSummary =
+    entries.fold(LogSummary()) { summary, entry ->
+        val nextTotal = summary.totalCharacters + entry.event.body().length
+
+        when (entry.event) {
+            is LogEvent.Info -> summary.copy(
+                infoCount = summary.infoCount + 1,
+                totalCharacters = nextTotal,
+            )
+            is LogEvent.Error -> summary.copy(
+                errorCount = summary.errorCount + 1,
+                totalCharacters = nextTotal,
+            )
+            is LogEvent.Debug -> summary.copy(
+                debugCount = summary.debugCount + 1,
+                totalCharacters = nextTotal,
+            )
+        }
     }
 
-    val totalChars = entries
-        .map { it.event.body().length }
-        .fold(0) { acc, length -> acc + length }
-
-    return "Summary: info=${counts.getValue("INFO")}, " +
-        "error=${counts.getValue("ERROR")}, " +
-        "debug=${counts.getValue("DEBUG")}, " +
-        "chars=$totalChars"
-}
+fun buildSummary(entries: List<LogEntry>): String = summarizeEntries(entries).format()
 
 fun main() {
     val app = Application(logger = ConsoleLogger())

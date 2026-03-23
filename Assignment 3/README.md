@@ -1,58 +1,176 @@
-# Assignment 3: Average Age Console Project
+# Assignment 3: People And Average-Age Analysis
 
-This project is a Kotlin console application that works with a list of people, keeps only names that begin with `A` or `B`, calculates their average age, and prints the result rounded to one decimal place.
+Assignment 3 has been expanded into a more complete people-analysis console project. It still calculates average age, but it now does so through a richer object model and a collection pipeline that explicitly demonstrates the Kotlin concepts requested for the assignment.
 
-## Project Goal
+## What The Program Does
 
-The program processes a list of `Person` objects in four steps:
+The program stores an immutable list of people, filters names by initials, optionally applies an additional selector, calculates the average age, groups matches by city, and prints a descriptive summary.
 
-1. filter people whose names begin with `A` or `B`
-2. extract their ages
-3. calculate the average age
-4. format the result to one decimal place and print it
+The main scenario in this assignment is:
 
-Sample data used in `main`:
+1. create a roster with `vararg` input
+2. keep only names beginning with chosen initials
+3. apply an extra lambda filter such as `age >= 18`
+4. extract ages and calculate the average
+5. summarize the selected people by city
+6. return a structured sealed result and convert it to a readable message
+
+## Kotlin Features Implemented
+
+- functions and expression bodies
+- default and named arguments
+- varargs
+- infix and extension functions
+- immutable collections
+- lambdas and higher-order functions
+- `map`, `filter`, and `fold`
+- classes, inheritance, interfaces, data classes, and sealed classes
+
+## Feature Breakdown
+
+### Functions and expression bodies
+
+Examples:
 
 ```kotlin
-val people = listOf(
-    Person("Alice", 25),
-    Person("Bob", 30),
-    Person("Charlie", 35),
-    Person("Anna", 22),
-    Person("Ben", 28),
+fun people(vararg members: Person): List<Person> = members.toList()
+
+fun formatAverageAge(averageAge: Double): String =
+    String.format(Locale.US, "%.1f", averageAge)
+```
+
+### Default and named arguments
+
+The APIs are flexible because they provide default values:
+
+```kotlin
+fun filterPeopleByInitials(
+    people: List<Person>,
+    initials: Set<Char> = setOf('A', 'B'),
+): List<Person>
+
+fun buildAverageAgeMessage(
+    people: List<Person>,
+    initials: Set<Char> = setOf('A', 'B'),
+    selector: (Person) -> Boolean = { true },
+): String
+```
+
+Named arguments are used in the implementation and tests:
+
+```kotlin
+val message = buildAverageAgeMessage(
+    people = roster,
+    initials = setOf('A', 'B'),
+    selector = { person -> person.age >= 18 },
 )
 ```
 
-Matching people:
+### Varargs
 
-- Alice
-- Bob
-- Anna
-- Ben
+The roster is built with:
 
-Average calculation:
-
-- total age = `25 + 30 + 22 + 28 = 105`
-- number of matching people = `4`
-- average age = `105 / 4 = 26.25`
-- rounded to one decimal place = `26.3`
-
-Console output:
-
-```text
-Average age for names starting with A or B: 26.3
+```kotlin
+val roster = people(
+    Person("Alice", 25, "Lagos"),
+    Person("Bob", 30, "Abuja"),
+)
 ```
 
-## What This Project Contains
+### Infix and extension functions
 
-- a standalone Kotlin/JVM console project
-- a `Person` data class
-- filtering logic for names starting with selected initials
-- age extraction logic
-- average-age calculation logic
-- one-decimal-place formatting
-- unit tests for the main behavior
-- a Gradle wrapper so the project can run without a global Gradle installation
+This assignment includes:
+
+```kotlin
+infix fun String.startsWithAny(initials: Set<Char>): Boolean
+fun List<Person>.averageAgeOrNull(): Double?
+fun AgeReport.describe(): String
+```
+
+Example:
+
+```kotlin
+"Alice" startsWithAny setOf('A', 'B')
+```
+
+### Immutable collections
+
+The roster, filtered lists, and city summaries are all handled as immutable `List`, `Set`, and `Map` values.
+
+### Lambdas and higher-order functions
+
+The `selector` parameter allows callers to add custom filtering behavior:
+
+```kotlin
+selector: (Person) -> Boolean = { true }
+```
+
+This makes the project more reusable than a hard-coded age calculator.
+
+### `map`, `filter`, and `fold`
+
+- `filter` narrows the roster by initials and custom selection rules
+- `map` extracts ages from people
+- `fold` calculates totals and builds city-count maps
+
+### Classes, inheritance, interfaces, data classes, and sealed classes
+
+All requested type categories are present:
+
+- `CommunityMember` is an open base class
+- `AgeAware` is an interface
+- `Person` is a data class
+- `AgeReport` is a sealed class
+
+## Important Types
+
+### `Person`
+
+Stores the person’s name, age, and city:
+
+```kotlin
+data class Person(
+    override val name: String,
+    override val age: Int,
+    val city: String = "Unknown",
+) : CommunityMember(name), AgeAware
+```
+
+### `AgeReport`
+
+Represents either:
+
+- a successful `MatchedGroup`
+- a `NoMatches` result
+
+This is useful because the program returns a structured result before converting it to a string.
+
+## Important Functions
+
+### `summarizeByCity`
+
+Builds a city-count map using `fold`:
+
+```kotlin
+fun summarizeByCity(
+    people: List<Person>,
+    selector: (Person) -> Boolean = { true },
+): Map<String, Int>
+```
+
+### `analyzePeople`
+
+Returns an `AgeReport` object with the filtered people, average age, and city counts.
+
+### `buildAverageAgeMessage`
+
+Creates the final console message from the structured report.
+
+## Example Output
+
+```text
+Average age for initials A, B: 26.3 | People: Alice (adult), Bob (adult), Anna (adult), Ben (adult) | Cities: Lagos=1, Abuja=2, Ibadan=1
+```
 
 ## Project Structure
 
@@ -74,76 +192,7 @@ Assignment 3/
     `-- gradle-wrapper.properties
 ```
 
-## How the Program Works
-
-The program is broken into small functions:
-
-- `filterPeopleByInitials(people, initials)`: keeps only people whose names start with one of the chosen letters
-- `extractAges(people)`: converts a list of people into a list of ages
-- `calculateAverageAge(ages)`: computes the average age and returns `null` if the list is empty
-- `formatAverageAge(averageAge)`: rounds and formats the result to one decimal place
-- `buildAverageAgeMessage(people, initials)`: produces the final printable message
-
-Main flow:
-
-```kotlin
-fun main() {
-    val people = listOf(
-        Person("Alice", 25),
-        Person("Bob", 30),
-        Person("Charlie", 35),
-        Person("Anna", 22),
-        Person("Ben", 28),
-    )
-
-    println(buildAverageAgeMessage(people))
-}
-```
-
-## Source Code Summary
-
-Data model:
-
-```kotlin
-data class Person(val name: String, val age: Int)
-```
-
-Filtering logic:
-
-```kotlin
-fun filterPeopleByInitials(
-    people: List<Person>,
-    initials: Set<Char> = setOf('A', 'B'),
-): List<Person>
-```
-
-Average calculation:
-
-```kotlin
-fun calculateAverageAge(ages: List<Int>): Double? =
-    ages.takeIf { it.isNotEmpty() }?.average()
-```
-
-Formatting:
-
-```kotlin
-fun formatAverageAge(averageAge: Double): String =
-    String.format(Locale.US, "%.1f", averageAge)
-```
-
-## User Guide
-
-### Prerequisites
-
-- Java JDK 24 installed
-- Windows PowerShell if you want to use `gradlew.bat`
-
-This project uses:
-
-- Gradle `8.14.4`
-- Kotlin Gradle plugin `2.2.21`
-
-### Run the program
+## How To Run
 
 From the `Assignment 3` folder:
 
@@ -151,107 +200,23 @@ From the `Assignment 3` folder:
 .\gradlew.bat run
 ```
 
-On Git Bash or another Unix-like shell:
-
-```bash
-./gradlew run
-```
-
-### Run the tests
+## How To Test
 
 ```powershell
 .\gradlew.bat test
 ```
 
-### Open in IntelliJ IDEA or Android Studio
-
-1. Open the `Assignment 3` folder as a project.
-2. Let Gradle sync finish.
-3. Run `Main.kt` to see the console output.
-4. Run `AverageAgeTest.kt` to execute the tests.
-
-## Example Processing Walkthrough
-
-Starting list:
-
-```kotlin
-listOf(
-    Person("Alice", 25),
-    Person("Bob", 30),
-    Person("Charlie", 35),
-    Person("Anna", 22),
-    Person("Ben", 28),
-)
-```
-
-After filtering by initials `A` and `B`:
-
-```kotlin
-listOf(
-    Person("Alice", 25),
-    Person("Bob", 30),
-    Person("Anna", 22),
-    Person("Ben", 28),
-)
-```
-
-Extracted ages:
-
-```kotlin
-listOf(25, 30, 22, 28)
-```
-
-Computed average:
-
-```kotlin
-26.25
-```
-
-Formatted value:
-
-```text
-26.3
-```
-
-## How to Change the Data
-
-You can edit the list in `main`:
-
-```kotlin
-val people = listOf(
-    Person("Ada", 20),
-    Person("Brian", 27),
-    Person("Clara", 31),
-)
-```
-
-You can also change the initials:
-
-```kotlin
-val message = buildAverageAgeMessage(people, setOf('C', 'D'))
-```
-
 ## Test Coverage
 
-The tests verify:
+The test suite checks:
 
-- filtering names that start with `A` or `B`
-- extracting ages from the filtered list
-- calculating the average age
-- formatting to one decimal place
-- handling empty input for averaging
-- building the final output message
+- filtering by initials
+- age extraction
+- average calculation
+- fold-based city summaries
+- sealed-report generation
+- no-match handling
 
 ## Summary
 
-This project demonstrates list filtering, mapping, average calculation, and numeric formatting in a small Kotlin console application.
-
-## Collaboration
-
-For changes in this folder, use a short-lived branch from `main`, for example `docs/assignment-3-readme-update` or `feat/assignment-3-improvement`.
-
-Before opening a pull request:
-
-- keep the change scoped to `Assignment 3/` whenever possible
-- run `.\gradlew.bat test`
-- open the pull request into `main`
+Assignment 3 is now a fuller Kotlin feature showcase built around a people domain. It keeps the original age-calculation goal, but upgrades it with better structure, richer outputs, and explicit use of every required Kotlin concept.

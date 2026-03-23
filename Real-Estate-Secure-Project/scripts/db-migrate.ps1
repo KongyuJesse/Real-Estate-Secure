@@ -2,14 +2,14 @@
 # Requires psql in PATH
 
 param(
-  [string]$Host = $env:PGHOST,
+  [string]$DbHost = $env:PGHOST,
   [int]$Port = $env:PGPORT,
   [string]$Database = $env:PGDATABASE,
   [string]$User = $env:PGUSER,
   [string]$Password = $env:PGPASSWORD
 )
 
-if (-not $Host) { $Host = 'localhost' }
+if (-not $DbHost) { $DbHost = 'localhost' }
 if (-not $Port) { $Port = 5432 }
 if (-not $Database) { $Database = 'real_estate_secure' }
 if (-not $User) { $User = 'postgres' }
@@ -24,11 +24,11 @@ $seeds = Join-Path $root 'database\seeds'
 Write-Host "Running migrations from $migrations"
 Get-ChildItem $migrations -Filter '*.sql' | Sort-Object Name | ForEach-Object {
   Write-Host "Applying $($_.Name)"
-  psql -h $Host -p $Port -U $User -d $Database -v ON_ERROR_STOP=1 -f $_.FullName
+  psql -h $DbHost -p $Port -U $User -d $Database -v ON_ERROR_STOP=1 -f $_.FullName
 }
 
 Write-Host "Running seeds from $seeds"
 Get-ChildItem $seeds -Filter '*.sql' | Sort-Object Name | ForEach-Object {
   Write-Host "Seeding $($_.Name)"
-  psql -h $Host -p $Port -U $User -d $Database -v ON_ERROR_STOP=1 -f $_.FullName
+  psql -h $DbHost -p $Port -U $User -d $Database -v ON_ERROR_STOP=1 -f $_.FullName
 }

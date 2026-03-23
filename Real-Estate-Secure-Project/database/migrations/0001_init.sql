@@ -4,143 +4,273 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Enumerations
-CREATE TYPE user_role_type AS ENUM (
-  'buyer',
-  'seller',
-  'landlord',
-  'tenant',
-  'lawyer',
-  'surveyor',
-  'agent',
-  'admin',
-  'super_admin'
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_type') THEN
+    CREATE TYPE user_role_type AS ENUM (
+      'buyer',
+      'seller',
+      'landlord',
+      'tenant',
+      'lawyer',
+      'surveyor',
+      'agent',
+      'admin',
+      'super_admin'
+    );
+  END IF;
 
-CREATE TYPE address_type AS ENUM ('residential', 'legal', 'billing', 'shipping');
-CREATE TYPE identity_document_type AS ENUM (
-  'national_id',
-  'passport',
-  'driver_license',
-  'residence_permit'
-);
-CREATE TYPE verification_status AS ENUM ('pending', 'verified', 'rejected', 'expired');
-CREATE TYPE verification_method AS ENUM ('manual', 'automated', 'hybrid');
-CREATE TYPE business_type AS ENUM (
-  'agency',
-  'law_firm',
-  'development_company',
-  'individual'
-);
-CREATE TYPE property_type AS ENUM (
-  'land',
-  'house',
-  'apartment',
-  'commercial',
-  'industrial',
-  'agricultural'
-);
-CREATE TYPE listing_type AS ENUM ('sale', 'rent', 'lease');
-CREATE TYPE property_status AS ENUM (
-  'draft',
-  'pending',
-  'active',
-  'sold',
-  'rented',
-  'expired',
-  'rejected',
-  'archived'
-);
-CREATE TYPE property_condition AS ENUM ('new', 'good', 'renovation_needed');
-CREATE TYPE location_type AS ENUM ('primary', 'additional', 'boundary');
-CREATE TYPE property_document_type AS ENUM (
-  'land_title',
-  'survey_plan',
-  'tax_clearance',
-  'non_encumbrance',
-  'sale_agreement',
-  'building_permit',
-  'certificate_of_habitation',
-  'valuation_report'
-);
-CREATE TYPE property_image_type AS ENUM (
-  'exterior',
-  'interior',
-  'kitchen',
-  'bathroom',
-  'bedroom',
-  'living',
-  'drone',
-  'floor_plan',
-  'virtual_tour'
-);
-CREATE TYPE video_type AS ENUM ('tour', 'drone', 'walkthrough', 'interview');
-CREATE TYPE watermark_status AS ENUM ('pending', 'applied', 'skipped');
-CREATE TYPE access_level AS ENUM ('public', 'verified_only', 'lawyer_only');
-CREATE TYPE request_type AS ENUM ('initial', 'appeal', 'update');
-CREATE TYPE request_status AS ENUM ('pending', 'in_review', 'approved', 'rejected', 'escalated');
-CREATE TYPE priority_level AS ENUM ('low', 'normal', 'medium', 'high', 'urgent');
-CREATE TYPE verification_step_type AS ENUM (
-  'document_check',
-  'ownership_verification',
-  'site_visit',
-  'legal_review'
-);
-CREATE TYPE verification_step_status AS ENUM (
-  'pending',
-  'in_progress',
-  'completed',
-  'skipped',
-  'blocked'
-);
-CREATE TYPE transaction_type AS ENUM ('sale', 'rent', 'lease');
-CREATE TYPE transaction_status AS ENUM (
-  'initiated',
-  'pending_deposit',
-  'deposited',
-  'documents_pending',
-  'documents_verified',
-  'inspection_period',
-  'lawyer_approval',
-  'completed',
-  'disputed',
-  'cancelled',
-  'refunded'
-);
-CREATE TYPE escrow_account_status AS ENUM ('active', 'held', 'released', 'closed');
-CREATE TYPE escrow_transaction_type AS ENUM ('deposit', 'withdrawal', 'hold', 'release', 'refund', 'fee');
-CREATE TYPE escrow_transaction_status AS ENUM ('pending', 'completed', 'failed', 'cancelled');
-CREATE TYPE payment_method_type AS ENUM ('momo', 'orange', 'bank_card', 'bank_transfer');
-CREATE TYPE payment_provider AS ENUM ('mtn', 'orange', 'visa', 'mastercard', 'ecobank', 'sgc');
-CREATE TYPE invoice_type AS ENUM ('platform_fee', 'legal_fee', 'subscription', 'deposit');
-CREATE TYPE invoice_status AS ENUM ('draft', 'pending', 'paid', 'overdue', 'cancelled', 'refunded');
-CREATE TYPE billing_cycle AS ENUM ('monthly', 'yearly');
-CREATE TYPE subscription_status AS ENUM ('active', 'pending', 'expired', 'cancelled', 'suspended');
-CREATE TYPE subscription_invoice_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
-CREATE TYPE dispute_type AS ENUM (
-  'document_fraud',
-  'title_dispute',
-  'payment_dispute',
-  'property_condition',
-  'other'
-);
-CREATE TYPE dispute_status AS ENUM ('open', 'investigating', 'resolved', 'escalated', 'closed');
-CREATE TYPE conversation_type AS ENUM ('direct', 'group', 'property', 'transaction');
-CREATE TYPE participant_role AS ENUM ('participant', 'admin', 'lawyer');
-CREATE TYPE message_type AS ENUM ('text', 'image', 'file', 'offer', 'location', 'contact');
-CREATE TYPE message_delivery_status AS ENUM ('sent', 'delivered', 'read');
-CREATE TYPE notification_frequency AS ENUM ('realtime', 'daily', 'weekly');
-CREATE TYPE document_verification_type AS ENUM ('manual', 'automated', 'expert');
-CREATE TYPE document_verification_action AS ENUM (
-  'submitted',
-  'viewed',
-  'verified',
-  'rejected',
-  'appealed'
-);
-CREATE TYPE lawyer_review_status AS ENUM ('pending', 'published', 'rejected', 'hidden');
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'address_type') THEN
+    CREATE TYPE address_type AS ENUM ('residential', 'legal', 'billing', 'shipping');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'identity_document_type') THEN
+    CREATE TYPE identity_document_type AS ENUM (
+      'national_id',
+      'passport',
+      'driver_license',
+      'residence_permit'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'verification_status') THEN
+    CREATE TYPE verification_status AS ENUM ('pending', 'verified', 'rejected', 'expired');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'verification_method') THEN
+    CREATE TYPE verification_method AS ENUM ('manual', 'automated', 'hybrid');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'business_type') THEN
+    CREATE TYPE business_type AS ENUM (
+      'agency',
+      'law_firm',
+      'development_company',
+      'individual'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'property_type') THEN
+    CREATE TYPE property_type AS ENUM (
+      'land',
+      'house',
+      'apartment',
+      'commercial',
+      'industrial',
+      'agricultural'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'listing_type') THEN
+    CREATE TYPE listing_type AS ENUM ('sale', 'rent', 'lease');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'property_status') THEN
+    CREATE TYPE property_status AS ENUM (
+      'draft',
+      'pending',
+      'active',
+      'sold',
+      'rented',
+      'expired',
+      'rejected',
+      'archived'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'property_condition') THEN
+    CREATE TYPE property_condition AS ENUM ('new', 'good', 'renovation_needed');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'location_type') THEN
+    CREATE TYPE location_type AS ENUM ('primary', 'additional', 'boundary');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'property_document_type') THEN
+    CREATE TYPE property_document_type AS ENUM (
+      'land_title',
+      'survey_plan',
+      'tax_clearance',
+      'non_encumbrance',
+      'sale_agreement',
+      'building_permit',
+      'certificate_of_habitation',
+      'valuation_report'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'property_image_type') THEN
+    CREATE TYPE property_image_type AS ENUM (
+      'exterior',
+      'interior',
+      'kitchen',
+      'bathroom',
+      'bedroom',
+      'living',
+      'drone',
+      'floor_plan',
+      'virtual_tour'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'video_type') THEN
+    CREATE TYPE video_type AS ENUM ('tour', 'drone', 'walkthrough', 'interview');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'watermark_status') THEN
+    CREATE TYPE watermark_status AS ENUM ('pending', 'applied', 'skipped');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'access_level') THEN
+    CREATE TYPE access_level AS ENUM ('public', 'verified_only', 'lawyer_only');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'request_type') THEN
+    CREATE TYPE request_type AS ENUM ('initial', 'appeal', 'update');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'request_status') THEN
+    CREATE TYPE request_status AS ENUM ('pending', 'in_review', 'approved', 'rejected', 'escalated');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'priority_level') THEN
+    CREATE TYPE priority_level AS ENUM ('low', 'normal', 'medium', 'high', 'urgent');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'verification_step_type') THEN
+    CREATE TYPE verification_step_type AS ENUM (
+      'document_check',
+      'ownership_verification',
+      'site_visit',
+      'legal_review'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'verification_step_status') THEN
+    CREATE TYPE verification_step_status AS ENUM (
+      'pending',
+      'in_progress',
+      'completed',
+      'skipped',
+      'blocked'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transaction_type') THEN
+    CREATE TYPE transaction_type AS ENUM ('sale', 'rent', 'lease');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transaction_status') THEN
+    CREATE TYPE transaction_status AS ENUM (
+      'initiated',
+      'pending_deposit',
+      'deposited',
+      'documents_pending',
+      'documents_verified',
+      'inspection_period',
+      'lawyer_approval',
+      'completed',
+      'disputed',
+      'cancelled',
+      'refunded'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'escrow_account_status') THEN
+    CREATE TYPE escrow_account_status AS ENUM ('active', 'held', 'released', 'closed');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'escrow_transaction_type') THEN
+    CREATE TYPE escrow_transaction_type AS ENUM ('deposit', 'withdrawal', 'hold', 'release', 'refund', 'fee');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'escrow_transaction_status') THEN
+    CREATE TYPE escrow_transaction_status AS ENUM ('pending', 'completed', 'failed', 'cancelled');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_method_type') THEN
+    CREATE TYPE payment_method_type AS ENUM ('momo', 'orange', 'bank_card', 'bank_transfer');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_provider') THEN
+    CREATE TYPE payment_provider AS ENUM ('mtn', 'orange', 'visa', 'mastercard', 'ecobank', 'sgc');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_type') THEN
+    CREATE TYPE invoice_type AS ENUM ('platform_fee', 'legal_fee', 'subscription', 'deposit');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_status') THEN
+    CREATE TYPE invoice_status AS ENUM ('draft', 'pending', 'paid', 'overdue', 'cancelled', 'refunded');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'billing_cycle') THEN
+    CREATE TYPE billing_cycle AS ENUM ('monthly', 'yearly');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'subscription_status') THEN
+    CREATE TYPE subscription_status AS ENUM ('active', 'pending', 'expired', 'cancelled', 'suspended');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'subscription_invoice_status') THEN
+    CREATE TYPE subscription_invoice_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dispute_type') THEN
+    CREATE TYPE dispute_type AS ENUM (
+      'document_fraud',
+      'title_dispute',
+      'payment_dispute',
+      'property_condition',
+      'other'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dispute_status') THEN
+    CREATE TYPE dispute_status AS ENUM ('open', 'investigating', 'resolved', 'escalated', 'closed');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'conversation_type') THEN
+    CREATE TYPE conversation_type AS ENUM ('direct', 'group', 'property', 'transaction');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'participant_role') THEN
+    CREATE TYPE participant_role AS ENUM ('participant', 'admin', 'lawyer');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'message_type') THEN
+    CREATE TYPE message_type AS ENUM ('text', 'image', 'file', 'offer', 'location', 'contact');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'message_delivery_status') THEN
+    CREATE TYPE message_delivery_status AS ENUM ('sent', 'delivered', 'read');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_frequency') THEN
+    CREATE TYPE notification_frequency AS ENUM ('realtime', 'daily', 'weekly');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'document_verification_type') THEN
+    CREATE TYPE document_verification_type AS ENUM ('manual', 'automated', 'expert');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'document_verification_action') THEN
+    CREATE TYPE document_verification_action AS ENUM (
+      'submitted',
+      'viewed',
+      'verified',
+      'rejected',
+      'appealed'
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'lawyer_review_status') THEN
+    CREATE TYPE lawyer_review_status AS ENUM ('pending', 'published', 'rejected', 'hidden');
+  END IF;
+END $$;
 
 -- Core user management
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   uuid UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -174,7 +304,7 @@ CREATE TABLE users (
   deleted_at TIMESTAMPTZ
 );
 
-CREATE TABLE user_roles (
+CREATE TABLE IF NOT EXISTS user_roles (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   role user_role_type NOT NULL,
@@ -187,7 +317,7 @@ CREATE TABLE user_roles (
   UNIQUE (user_id, role)
 );
 
-CREATE TABLE user_addresses (
+CREATE TABLE IF NOT EXISTS user_addresses (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   address_type address_type NOT NULL,
@@ -209,7 +339,7 @@ CREATE TABLE user_addresses (
 );
 
 -- KYC & verification
-CREATE TABLE identity_documents (
+CREATE TABLE IF NOT EXISTS identity_documents (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   document_type identity_document_type NOT NULL,
@@ -237,7 +367,7 @@ CREATE TABLE identity_documents (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE business_verifications (
+CREATE TABLE IF NOT EXISTS business_verifications (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   business_name VARCHAR(255) NOT NULL,
@@ -258,7 +388,7 @@ CREATE TABLE business_verifications (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE biometric_registrations (
+CREATE TABLE IF NOT EXISTS biometric_registrations (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   credential_id VARCHAR(255) UNIQUE NOT NULL,
@@ -272,7 +402,7 @@ CREATE TABLE biometric_registrations (
 );
 
 -- Property management
-CREATE TABLE properties (
+CREATE TABLE IF NOT EXISTS properties (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   uuid UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
   owner_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -316,7 +446,7 @@ CREATE TABLE properties (
   deleted_at TIMESTAMPTZ
 );
 
-CREATE TABLE property_locations (
+CREATE TABLE IF NOT EXISTS property_locations (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE RESTRICT,
   location_type location_type DEFAULT 'primary',
@@ -341,7 +471,7 @@ CREATE TABLE property_locations (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE property_documents (
+CREATE TABLE IF NOT EXISTS property_documents (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE RESTRICT,
   document_type property_document_type NOT NULL,
@@ -366,7 +496,7 @@ CREATE TABLE property_documents (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE property_images (
+CREATE TABLE IF NOT EXISTS property_images (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE RESTRICT,
   image_type property_image_type DEFAULT 'exterior',
@@ -395,7 +525,7 @@ CREATE TABLE property_images (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE property_videos (
+CREATE TABLE IF NOT EXISTS property_videos (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE RESTRICT,
   title VARCHAR(255) NOT NULL,
@@ -413,7 +543,7 @@ CREATE TABLE property_videos (
 );
 
 -- Legal & verification
-CREATE TABLE land_titles (
+CREATE TABLE IF NOT EXISTS land_titles (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE RESTRICT,
   title_number VARCHAR(100) UNIQUE NOT NULL,
@@ -444,7 +574,7 @@ CREATE TABLE land_titles (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE property_verification_requests (
+CREATE TABLE IF NOT EXISTS property_verification_requests (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE RESTRICT,
   requester_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -467,7 +597,7 @@ CREATE TABLE property_verification_requests (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE property_verification_steps (
+CREATE TABLE IF NOT EXISTS property_verification_steps (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   request_id BIGINT NOT NULL REFERENCES property_verification_requests(id) ON DELETE RESTRICT,
   step_name VARCHAR(100) NOT NULL,
@@ -484,7 +614,7 @@ CREATE TABLE property_verification_steps (
 );
 
 -- Transaction & escrow
-CREATE TABLE transactions (
+CREATE TABLE IF NOT EXISTS transactions (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   uuid UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
   transaction_number VARCHAR(50) UNIQUE NOT NULL,
@@ -515,7 +645,7 @@ CREATE TABLE transactions (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE payment_methods (
+CREATE TABLE IF NOT EXISTS payment_methods (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   method_type payment_method_type NOT NULL,
@@ -541,7 +671,7 @@ CREATE TABLE payment_methods (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE escrow_accounts (
+CREATE TABLE IF NOT EXISTS escrow_accounts (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   transaction_id BIGINT NOT NULL REFERENCES transactions(id) ON DELETE RESTRICT,
   account_number VARCHAR(50) UNIQUE NOT NULL,
@@ -559,7 +689,7 @@ CREATE TABLE escrow_accounts (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE escrow_transactions (
+CREATE TABLE IF NOT EXISTS escrow_transactions (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   escrow_account_id BIGINT NOT NULL REFERENCES escrow_accounts(id) ON DELETE RESTRICT,
   transaction_reference VARCHAR(100) UNIQUE NOT NULL,
@@ -581,7 +711,7 @@ CREATE TABLE escrow_transactions (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE invoices (
+CREATE TABLE IF NOT EXISTS invoices (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   invoice_number VARCHAR(50) UNIQUE NOT NULL,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -604,7 +734,7 @@ CREATE TABLE invoices (
 );
 
 -- Subscriptions & billing
-CREATE TABLE subscription_plans (
+CREATE TABLE IF NOT EXISTS subscription_plans (
   id SMALLINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   plan_name VARCHAR(50) UNIQUE NOT NULL,
   plan_code VARCHAR(20) UNIQUE NOT NULL,
@@ -630,7 +760,7 @@ CREATE TABLE subscription_plans (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE user_subscriptions (
+CREATE TABLE IF NOT EXISTS user_subscriptions (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   plan_id SMALLINT NOT NULL REFERENCES subscription_plans(id) ON DELETE RESTRICT,
@@ -656,7 +786,7 @@ CREATE TABLE user_subscriptions (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE subscription_invoices (
+CREATE TABLE IF NOT EXISTS subscription_invoices (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   subscription_id BIGINT NOT NULL REFERENCES user_subscriptions(id) ON DELETE RESTRICT,
   invoice_number VARCHAR(50) UNIQUE NOT NULL,
@@ -675,7 +805,7 @@ CREATE TABLE subscription_invoices (
 );
 
 -- Lawyer & professional services
-CREATE TABLE lawyer_profiles (
+CREATE TABLE IF NOT EXISTS lawyer_profiles (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   bar_number VARCHAR(50) UNIQUE NOT NULL,
@@ -702,7 +832,7 @@ CREATE TABLE lawyer_profiles (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE lawyer_reviews (
+CREATE TABLE IF NOT EXISTS lawyer_reviews (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   lawyer_id BIGINT NOT NULL REFERENCES lawyer_profiles(id) ON DELETE RESTRICT,
   reviewer_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -724,7 +854,7 @@ CREATE TABLE lawyer_reviews (
   UNIQUE (lawyer_id, reviewer_id, transaction_id)
 );
 
-CREATE TABLE surveyor_profiles (
+CREATE TABLE IF NOT EXISTS surveyor_profiles (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   license_number VARCHAR(50) UNIQUE NOT NULL,
@@ -741,7 +871,7 @@ CREATE TABLE surveyor_profiles (
 );
 
 -- Messaging & communication
-CREATE TABLE conversations (
+CREATE TABLE IF NOT EXISTS conversations (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   uuid UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
   property_id BIGINT REFERENCES properties(id) ON DELETE RESTRICT,
@@ -755,7 +885,7 @@ CREATE TABLE conversations (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE conversation_participants (
+CREATE TABLE IF NOT EXISTS conversation_participants (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   conversation_id BIGINT NOT NULL REFERENCES conversations(id) ON DELETE RESTRICT,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -769,7 +899,7 @@ CREATE TABLE conversation_participants (
   UNIQUE (conversation_id, user_id)
 );
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   conversation_id BIGINT NOT NULL REFERENCES conversations(id) ON DELETE RESTRICT,
   sender_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -788,7 +918,7 @@ CREATE TABLE messages (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE message_status (
+CREATE TABLE IF NOT EXISTS message_status (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   message_id BIGINT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -801,7 +931,7 @@ CREATE TABLE message_status (
 );
 
 -- Favorites & saved searches
-CREATE TABLE favorites (
+CREATE TABLE IF NOT EXISTS favorites (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE RESTRICT,
@@ -812,7 +942,7 @@ CREATE TABLE favorites (
   UNIQUE (user_id, property_id)
 );
 
-CREATE TABLE saved_searches (
+CREATE TABLE IF NOT EXISTS saved_searches (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   search_name VARCHAR(255) NOT NULL,
@@ -826,7 +956,7 @@ CREATE TABLE saved_searches (
 );
 
 -- Audit & security
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS audit_logs (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
   action VARCHAR(100) NOT NULL,
@@ -843,7 +973,7 @@ CREATE TABLE audit_logs (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE login_attempts (
+CREATE TABLE IF NOT EXISTS login_attempts (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   email VARCHAR(255),
   user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
@@ -855,7 +985,7 @@ CREATE TABLE login_attempts (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE api_keys (
+CREATE TABLE IF NOT EXISTS api_keys (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   name VARCHAR(255) NOT NULL,
@@ -870,7 +1000,7 @@ CREATE TABLE api_keys (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE document_verification_logs (
+CREATE TABLE IF NOT EXISTS document_verification_logs (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   document_id BIGINT NOT NULL REFERENCES property_documents(id) ON DELETE CASCADE,
   verifier_id BIGINT REFERENCES users(id) ON DELETE RESTRICT,
@@ -884,7 +1014,7 @@ CREATE TABLE document_verification_logs (
 );
 
 -- Disputes
-CREATE TABLE disputes (
+CREATE TABLE IF NOT EXISTS disputes (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   dispute_number VARCHAR(50) UNIQUE NOT NULL,
   transaction_id BIGINT NOT NULL REFERENCES transactions(id) ON DELETE RESTRICT,
@@ -907,7 +1037,7 @@ CREATE TABLE disputes (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE dispute_messages (
+CREATE TABLE IF NOT EXISTS dispute_messages (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   dispute_id BIGINT NOT NULL REFERENCES disputes(id) ON DELETE RESTRICT,
   sender_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -918,7 +1048,7 @@ CREATE TABLE dispute_messages (
 );
 
 -- Analytics
-CREATE TABLE property_views (
+CREATE TABLE IF NOT EXISTS property_views (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
   user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
@@ -930,7 +1060,7 @@ CREATE TABLE property_views (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE search_analytics (
+CREATE TABLE IF NOT EXISTS search_analytics (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
   session_id VARCHAR(100),
@@ -943,7 +1073,7 @@ CREATE TABLE search_analytics (
 );
 
 -- System configuration
-CREATE TABLE system_settings (
+CREATE TABLE IF NOT EXISTS system_settings (
   id SMALLINT PRIMARY KEY,
   setting_key VARCHAR(100) UNIQUE NOT NULL,
   setting_value JSONB NOT NULL,
@@ -954,7 +1084,7 @@ CREATE TABLE system_settings (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE email_templates (
+CREATE TABLE IF NOT EXISTS email_templates (
   id SMALLINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   template_name VARCHAR(100) UNIQUE NOT NULL,
   subject_en VARCHAR(255) NOT NULL,
@@ -968,7 +1098,7 @@ CREATE TABLE email_templates (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE sms_templates (
+CREATE TABLE IF NOT EXISTS sms_templates (
   id SMALLINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   template_name VARCHAR(100) UNIQUE NOT NULL,
   body_en VARCHAR(160) NOT NULL,
@@ -980,7 +1110,7 @@ CREATE TABLE sms_templates (
 );
 
 -- Currency and exchange rates
-CREATE TABLE currencies (
+CREATE TABLE IF NOT EXISTS currencies (
   code VARCHAR(3) PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   symbol VARCHAR(10),
@@ -988,7 +1118,7 @@ CREATE TABLE currencies (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE exchange_rates (
+CREATE TABLE IF NOT EXISTS exchange_rates (
   id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   base_currency VARCHAR(3) NOT NULL REFERENCES currencies(code) ON DELETE RESTRICT,
   quote_currency VARCHAR(3) NOT NULL REFERENCES currencies(code) ON DELETE RESTRICT,
@@ -999,19 +1129,20 @@ CREATE TABLE exchange_rates (
 );
 
 -- Indexes
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_phone ON users(phone_number);
-CREATE INDEX idx_users_status_created ON users(is_active, created_at);
-CREATE INDEX idx_properties_status_type ON properties(property_status, property_type);
-CREATE INDEX idx_properties_price ON properties(price);
-CREATE INDEX idx_properties_owner ON properties(owner_id);
-CREATE INDEX idx_properties_verification ON properties(verification_status);
-CREATE INDEX idx_property_locations_geo ON property_locations(latitude, longitude);
-CREATE INDEX idx_property_locations_geohash ON property_locations(geohash);
-CREATE INDEX idx_transactions_buyer ON transactions(buyer_id);
-CREATE INDEX idx_transactions_seller ON transactions(seller_id);
-CREATE INDEX idx_transactions_status ON transactions(transaction_status);
-CREATE INDEX idx_transactions_created ON transactions(created_at);
-CREATE INDEX idx_messages_conversation_created ON messages(conversation_id, created_at);
-CREATE INDEX idx_audit_entity ON audit_logs(entity_type, entity_id);
-CREATE INDEX idx_audit_user_created ON audit_logs(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone_number);
+CREATE INDEX IF NOT EXISTS idx_users_status_created ON users(is_active, created_at);
+CREATE INDEX IF NOT EXISTS idx_properties_status_type ON properties(property_status, property_type);
+CREATE INDEX IF NOT EXISTS idx_properties_price ON properties(price);
+CREATE INDEX IF NOT EXISTS idx_properties_owner ON properties(owner_id);
+CREATE INDEX IF NOT EXISTS idx_properties_verification ON properties(verification_status);
+CREATE INDEX IF NOT EXISTS idx_property_locations_geo ON property_locations(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_property_locations_geohash ON property_locations(geohash);
+CREATE INDEX IF NOT EXISTS idx_transactions_buyer ON transactions(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_seller ON transactions(seller_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(transaction_status);
+CREATE INDEX IF NOT EXISTS idx_transactions_created ON transactions(created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON messages(conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_user_created ON audit_logs(user_id, created_at);
+
