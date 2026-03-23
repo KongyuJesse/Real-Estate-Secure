@@ -47,8 +47,8 @@ object Cli {
         return when (command) {
             "help", "--help", "-h" -> HelpCommand
             "interactive", "wizard" -> InteractiveCommand
-            "ui", "desktop", "--ui" -> DesktopUiCommand
-            "concepts", "syntax", "comparison" -> ConceptsCommand
+            "ui", "desktop", "--ui", "studio" -> DesktopUiCommand
+            "concepts", "syntax", "comparison", "kotlin" -> ConceptsCommand
             "grade" -> parseGradeCommand(options)
             "generate" -> parseGenerateCommand(options)
             else -> throw IllegalArgumentException("Unknown command '$command'. Use 'help' to view usage.")
@@ -56,37 +56,58 @@ object Cli {
     }
 
     fun usage(): String = """
-        Grade Calculator Console (Kotlin)
+        PRODUCT OVERVIEW
+          Grade Calculator Studio grades Excel workbooks, generates realistic sample score sheets,
+          and offers both a guided CLI workflow and a desktop UI for non-terminal users.
 
-        Commands:
-          interactive / wizard  Launch interactive option picker (recommended).
-          ui / desktop          Launch desktop application mode (Swing UI).
-          concepts / syntax     Show Kotlin feature showcase and Kotlin syntax/concept comparison.
-          grade     Read an Excel sheet, compute totals/percentages, and write letter grades.
-          generate  Generate a random student marks Excel sheet.
+        COMMANDS
+          interactive / wizard       Launch the interactive wizard.
+          ui / desktop / studio      Launch the desktop application.
+          concepts / syntax / kotlin Show the Kotlin assignment showcase.
+          grade                      Grade one workbook or a whole folder of workbooks.
+          generate                   Generate a sample student-score workbook.
 
-        Grade command:
-          grade --input <path> [--output <path>] [--output-dir <folder>] [--choose-folder]
-                [--recursive] [--sheet <sheetNameOrIndex>]
-                [--header-row <1-based-number>] [--max-total <number>]
-                [--total-column <columnName>] [--percentage-column <columnName>]
-                [--grade-column <columnName>] [--overwrite]
+        GRADE COMMAND
+          grade --input <path>
+                [--output <path>]
+                [--output-dir <folder>]
+                [--choose-folder]
+                [--recursive]
+                [--sheet <sheetNameOrIndex>]
+                [--header-row <1-based-number>]
+                [--max-total <number>]
+                [--total-column <columnName>]
+                [--percentage-column <columnName>]
+                [--grade-column <columnName>]
+                [--overwrite]
 
-        Generate command:
-          generate [--output <path>] [--output-dir <folder>] [--choose-folder]
-                   [--students <number>] [--subjects <comma-separated>]
-                   [--sheet-name <name>] [--include-total <true|false>]
-                   [--seed <number>] [--min-mark <number>] [--max-mark <number>] [--overwrite]
+          Notes:
+            - If --input is a workbook and no output path is supplied, a sibling file named
+              <original>_graded.xlsx is created automatically.
+            - If --input is a folder, use --output-dir for clean batch output, or --choose-folder
+              to pick the destination interactively.
 
-        Examples:
+        GENERATE COMMAND
+          generate [--output <path>]
+                   [--output-dir <folder>]
+                   [--choose-folder]
+                   [--students <number>]
+                   [--subjects <comma-separated>]
+                   [--sheet-name <name>]
+                   [--include-total <true|false>]
+                   [--seed <number>]
+                   [--min-mark <number>]
+                   [--max-mark <number>]
+                   [--overwrite]
+
+        HIGH-VALUE EXAMPLES
           interactive
-          wizard
           ui
-          concepts
           grade --input "C:\data\students.xlsx"
-          grade --input "C:\data\raw-marks" --output-dir "C:\data\graded" --recursive
           grade --input "C:\data\students.xlsx" --sheet "Class A" --output "C:\data\students_graded.xlsx"
+          grade --input "C:\data\raw-marks" --output-dir "C:\data\graded" --recursive
           generate --output "C:\data\random_students.xlsx" --students 120 --subjects "Math,English,Physics"
+          concepts
     """.trimIndent()
 
     private fun parseGradeCommand(options: Map<String, String>): GradeCommand {

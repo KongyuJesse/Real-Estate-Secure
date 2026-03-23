@@ -14,14 +14,14 @@ fun main(args: Array<String>) {
     try {
         when (val command = Cli.parse(args)) {
             HelpCommand -> {
-                println(Cli.usage())
+                println(ConsoleExperience.helpScreen(Cli.usage()))
                 exitProcess(0)
             }
             DesktopUiCommand -> {
                 DesktopApp.launch()
             }
             ConceptsCommand -> {
-                println(KotlinFeatureShowcase.asConsoleText())
+                println(ConsoleExperience.conceptsScreen(KotlinFeatureShowcase.asConsoleText()))
                 exitProcess(0)
             }
             InteractiveCommand -> {
@@ -31,20 +31,14 @@ fun main(args: Array<String>) {
             is GenerateCommand -> {
                 val resolved = withResolvedGenerateOutputPath(command)
                 val result = RandomSheetGenerator().generate(resolved)
-                println("Random sheet generated successfully.")
-                println("Output: ${result.outputPath}")
-                println("Sheet: ${result.sheetName}")
-                println("Students: ${result.students}")
-                println("Subjects: ${result.subjects.joinToString(", ")}")
+                println(ConsoleExperience.generateResult(result))
             }
             is GradeCommand -> {
                 runGradeFlow(command)
             }
         }
     } catch (exception: Throwable) {
-        System.err.println("Error: ${exception.message}")
-        System.err.println()
-        System.err.println(Cli.usage())
+        System.err.println(ConsoleExperience.error(exception.message ?: "Unknown error."))
         exitProcess(1)
     }
 }
@@ -53,16 +47,18 @@ private fun runGradeFlow(command: GradeCommand) {
     require(Files.exists(command.inputPath)) { "Input path not found: ${command.inputPath}" }
     val grader = ExcelGrader()
     if (Files.isDirectory(command.inputPath)) {
-        runBatchDirectoryGrading(grader, command)
+        val summary = runBatchDirectoryGrading(grader, command)
+        println()
+        println(ConsoleExperience.batchSummary(summary))
         return
     }
 
     val resolvedCommand = withResolvedGradeOutputPath(command, command.inputPath)
     val result = grader.grade(resolvedCommand)
-    printSingleGradeResult(result)
+    println(ConsoleExperience.gradeResult(result))
 }
 
-private fun runBatchDirectoryGrading(grader: ExcelGrader, command: GradeCommand) {
+private fun runBatchDirectoryGrading(grader: ExcelGrader, command: GradeCommand): BatchGradeSummary {
     require(command.outputPath == null) {
         "When --input is a folder, use --output-dir (or --choose-folder) instead of --output."
     }
@@ -72,10 +68,12 @@ private fun runBatchDirectoryGrading(grader: ExcelGrader, command: GradeCommand)
         "No Excel files (.xlsx or .xls) found in folder: ${command.inputPath}"
     }
 
+    println(ConsoleExperience.batchStart(files.size, command.inputPath, outputDirectory))
+
     var successCount = 0
     var failedCount = 0
-    val failures = mutableListOf<String>()
-    println("Found ${files.size} Excel file(s). Starting grading...")
+    val failures = mutableListOf<BatchFailureDetail>()
+
     for (inputFile in files) {
         val outputFile = outputDirectory.resolve(derivedGradedFileName(inputFile))
         val fileCommand = command.copy(
@@ -87,46 +85,37 @@ private fun runBatchDirectoryGrading(grader: ExcelGrader, command: GradeCommand)
         try {
             val result = grader.grade(fileCommand)
             successCount += 1
-            println("[OK] ${result.inputPath.fileName} -> ${result.outputPath}")
-            println("     Processed rows: ${result.processedRows}, skipped empty: ${result.skippedEmptyRows}, skipped no-scores: ${result.skippedNoScoreRows}")
+            println(
+                ConsoleExperience.batchProgress(
+                    success = true,
+                    inputFile = inputFile,
+                    detail = "rows=${result.processedRows}, output=${result.outputPath.fileName}",
+                ),
+            )
         } catch (error: Throwable) {
             failedCount += 1
-            failures += "${inputFile.fileName}: ${error.message}"
-            println("[FAILED] ${inputFile.fileName}: ${error.message}")
+            failures += BatchFailureDetail(
+                fileName = inputFile.fileName.toString(),
+                message = error.message ?: "Unknown error.",
+            )
+            println(
+                ConsoleExperience.batchProgress(
+                    success = false,
+                    inputFile = inputFile,
+                    detail = error.message ?: "Unknown error.",
+                ),
+            )
         }
     }
 
-    println()
-    println("Batch grading completed.")
-    println("Input folder: ${command.inputPath}")
-    println("Output folder: $outputDirectory")
-    println("Succeeded: $successCount")
-    println("Failed: $failedCount")
-    if (failures.isNotEmpty()) {
-        println("Failure details:")
-        failures.forEach { println("  - $it") }
-    }
-}
-
-private fun printSingleGradeResult(result: GradeRunResult) {
-    println("Grading completed successfully.")
-    println("Input: ${result.inputPath}")
-    println("Output: ${result.outputPath}")
-    println("Sheet: ${result.sheetName}")
-    println("Processed rows: ${result.processedRows}")
-    println("Skipped empty rows: ${result.skippedEmptyRows}")
-    println("Skipped rows without valid scores: ${result.skippedNoScoreRows}")
-    println("Negative marks corrected to 0: ${result.negativeMarksCorrected}")
-    println("Percentages clamped to 100: ${result.percentagesClampedAbove100}")
-    println("Max total used: ${"%.2f".format(result.maxTotalUsed)}")
-    println("Grade distribution:")
-    if (result.gradeDistribution.isEmpty()) {
-        println("  (no grades assigned)")
-    } else {
-        result.gradeDistribution.forEach { (grade, count) ->
-            println("  $grade: $count")
-        }
-    }
+    return BatchGradeSummary(
+        inputDirectory = command.inputPath,
+        outputDirectory = outputDirectory,
+        scannedFiles = files.size,
+        succeeded = successCount,
+        failed = failedCount,
+        failures = failures,
+    )
 }
 
 private fun withResolvedGradeOutputPath(command: GradeCommand, inputFile: Path): GradeCommand {
@@ -143,9 +132,9 @@ private fun resolveGradeOutputDirectory(command: GradeCommand, inputPath: Path):
     val fromOutputPath = command.outputPath?.parent
     val defaultDirectory = command.outputDirectory
         ?: fromOutputPath
-        ?: if (Files.isDirectory(inputPath)) inputPath else (inputPath.parent ?: Paths.get("."))
+        ?: if (Files.isDirectory(inputPath)) inputPath.resolve("graded-results") else (inputPath.parent ?: Paths.get("."))
 
-    val selected = if (command.chooseFolderInteractive || (command.outputDirectory == null && command.outputPath == null)) {
+    val selected = if (command.chooseFolderInteractive) {
         promptForDirectory(defaultDirectory, "graded Excel files")
     } else {
         defaultDirectory
@@ -165,7 +154,11 @@ private fun withResolvedGenerateOutputPath(command: GenerateCommand): GenerateCo
         defaultDirectory
     }
     Files.createDirectories(selected)
-    return command.copy(outputPath = selected.resolve(command.outputPath.fileName.toString()), outputDirectory = null, chooseFolderInteractive = false)
+    return command.copy(
+        outputPath = selected.resolve(command.outputPath.fileName.toString()),
+        outputDirectory = null,
+        chooseFolderInteractive = false,
+    )
 }
 
 private fun promptForDirectory(defaultDirectory: Path, description: String): Path {
@@ -197,31 +190,31 @@ fun derivedGradedFileName(inputFile: Path): String {
 }
 
 private fun runInteractiveMode() {
-    println("Grade Calculator Interactive Mode")
-    println("Choose an option:")
+    println(ConsoleExperience.interactiveWelcome())
     while (true) {
         println()
-        println("1) Generate a sample Excel sheet")
-        println("2) Grade an Excel sheet")
-        println("3) Launch desktop UI")
-        println("4) Show CLI help")
-        println("5) Exit")
-        when (promptMenuChoice(1, 5, 1)) {
+        println(ConsoleExperience.interactiveMenu())
+        when (promptMenuChoice(1, 7, 2)) {
             1 -> runInteractiveGenerate()
             2 -> runInteractiveSingleFileGrade()
-            3 -> DesktopApp.launch()
-            4 -> println(Cli.usage())
-            5 -> return
+            3 -> runInteractiveDirectoryGrade()
+            4 -> DesktopApp.launch()
+            5 -> println(ConsoleExperience.conceptsScreen(KotlinFeatureShowcase.asConsoleText()))
+            6 -> println(ConsoleExperience.helpScreen(Cli.usage()))
+            7 -> return
         }
     }
 }
 
 private fun runInteractiveSingleFileGrade() {
     println()
-    println("Grade Excel Sheet")
+    println("Single Workbook Grading")
+    println("-----------------------")
+
     val inputFile = promptExistingPath("Enter Excel file path", requireDirectory = false)
     val sheetSelector = promptSheetSelection(inputFile)
     val outputChoice = promptGradedOutputChoice(inputFile)
+    val advanced = promptInteractiveGradeOptions()
 
     val command = GradeCommand(
         inputPath = inputFile,
@@ -230,12 +223,43 @@ private fun runInteractiveSingleFileGrade() {
         chooseFolderInteractive = false,
         recursive = false,
         sheetSelector = sheetSelector,
-        headerRowNumber = null,
-        maxTotal = null,
-        totalColumnHint = null,
-        percentageColumnName = "Percentage",
-        gradeColumnName = "Grade",
+        headerRowNumber = advanced.headerRowNumber,
+        maxTotal = advanced.maxTotal,
+        totalColumnHint = advanced.totalColumnHint,
+        percentageColumnName = advanced.percentageColumnName,
+        gradeColumnName = advanced.gradeColumnName,
         overwrite = outputChoice.overwrite,
+    )
+
+    runGradeFlow(command)
+}
+
+private fun runInteractiveDirectoryGrade() {
+    println()
+    println("Batch Folder Grading")
+    println("--------------------")
+
+    val inputDirectory = promptExistingPath("Enter folder containing Excel files", requireDirectory = true)
+    val recursive = promptYesNo("Include subfolders? (y/N)", defaultYes = false)
+    val defaultOutputDirectory = inputDirectory.resolve("graded-results")
+    val outputDirectory = promptDirectoryPath("Output folder", defaultOutputDirectory)
+    val overwrite = promptYesNo("Replace any matching files already in the output folder? (y/N)", defaultYes = false)
+    val advanced = promptInteractiveGradeOptions()
+    val sheetSelector = promptOptionalText("Sheet name or index for every workbook (press Enter for auto-detect)")
+
+    val command = GradeCommand(
+        inputPath = inputDirectory,
+        outputPath = null,
+        outputDirectory = outputDirectory,
+        chooseFolderInteractive = false,
+        recursive = recursive,
+        sheetSelector = sheetSelector,
+        headerRowNumber = advanced.headerRowNumber,
+        maxTotal = advanced.maxTotal,
+        totalColumnHint = advanced.totalColumnHint,
+        percentageColumnName = advanced.percentageColumnName,
+        gradeColumnName = advanced.gradeColumnName,
+        overwrite = overwrite,
     )
 
     runGradeFlow(command)
@@ -243,12 +267,19 @@ private fun runInteractiveSingleFileGrade() {
 
 private fun runInteractiveGenerate() {
     println()
-    println("Generate Sample Excel Sheet")
-    val outputPathText = promptText("Output file path", "random_students.xlsx")
+    println("Sample Workbook Generator")
+    println("-------------------------")
+
+    val outputPath = promptPathWithDefault("Output file path", Paths.get("random_students.xlsx"))
     val students = promptPositiveInt("Number of students", defaultValue = 30)
     val subjectsRaw = promptText("Subjects (comma-separated)", "Math,English,Physics,Chemistry,Biology")
+    val sheetName = promptText("Worksheet name", "Students")
+    val includeTotalColumn = promptYesNo("Include a Total column? (Y/n)", defaultYes = true)
+    val minMark = promptPositiveDouble("Minimum mark", defaultValue = 35.0)
+    val maxMark = promptPositiveDouble("Maximum mark", defaultValue = 100.0, strictlyGreaterThan = minMark)
+    val seed = promptOptionalLong("Optional random seed (press Enter for a fresh run)")
+
     val subjects = subjectsRaw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-    val outputPath = Paths.get(outputPathText)
     val overwrite = if (Files.exists(outputPath)) {
         promptYesNo("Output already exists. Replace it? (y/N)", defaultYes = false)
     } else {
@@ -261,20 +292,37 @@ private fun runInteractiveGenerate() {
         chooseFolderInteractive = false,
         students = students,
         subjects = if (subjects.isEmpty()) listOf("Math", "English", "Physics", "Chemistry", "Biology") else subjects,
-        sheetName = "Students",
-        includeTotalColumn = true,
-        seed = null,
-        minMark = 35.0,
-        maxMark = 100.0,
+        sheetName = sheetName,
+        includeTotalColumn = includeTotalColumn,
+        seed = seed,
+        minMark = minMark,
+        maxMark = maxMark,
         overwrite = overwrite,
     )
 
     val result = RandomSheetGenerator().generate(command)
-    println("Random sheet generated successfully.")
-    println("Output: ${result.outputPath}")
-    println("Sheet: ${result.sheetName}")
-    println("Students: ${result.students}")
-    println("Subjects: ${result.subjects.joinToString(", ")}")
+    println(ConsoleExperience.generateResult(result))
+}
+
+private fun promptInteractiveGradeOptions(): InteractiveGradeOptions {
+    val advanced = promptYesNo("Configure advanced grading options? (y/N)", defaultYes = false)
+    if (!advanced) {
+        return InteractiveGradeOptions(
+            headerRowNumber = null,
+            maxTotal = null,
+            totalColumnHint = null,
+            percentageColumnName = "Percentage",
+            gradeColumnName = "Grade",
+        )
+    }
+
+    return InteractiveGradeOptions(
+        headerRowNumber = promptOptionalPositiveInt("Header row number (press Enter for auto-detect)"),
+        maxTotal = promptOptionalPositiveDouble("Maximum possible total (press Enter for auto-infer)"),
+        totalColumnHint = promptOptionalText("Existing total column name hint (press Enter for auto-detect)"),
+        percentageColumnName = promptText("Percentage column name", "Percentage"),
+        gradeColumnName = promptText("Grade column name", "Grade"),
+    )
 }
 
 private fun promptSheetSelection(inputFile: Path): String? {
@@ -299,15 +347,13 @@ private fun promptGradedOutputChoice(inputFile: Path): InteractiveOutputChoice {
     val defaultOutputPath = inputFile.resolveSibling(derivedGradedFileName(inputFile))
     while (true) {
         val keepDefault = promptYesNo(
-            "Keep default graded file name '${defaultOutputPath.fileName}'? (Y/n)",
+            "Keep the suggested output name '${defaultOutputPath.fileName}'? (Y/n)",
             defaultYes = true,
         )
         val chosenPath = if (keepDefault) {
             defaultOutputPath
         } else {
-            val entered = promptText("New output file name or path", defaultOutputPath.fileName.toString())
-            val typedPath = Paths.get(entered)
-            if (typedPath.isAbsolute) typedPath else defaultOutputPath.parent.resolve(typedPath)
+            promptPathWithDefault("New output file name or path", defaultOutputPath)
         }
 
         if (!Files.exists(chosenPath)) {
@@ -365,7 +411,7 @@ private fun promptExistingPath(prompt: String, requireDirectory: Boolean): Path 
 
 private fun promptDirectoryPath(prompt: String, defaultPath: Path): Path {
     while (true) {
-        print("$prompt: ")
+        print("$prompt [$defaultPath]: ")
         val input = readConsoleLineOrFail().trim()
         val chosen = if (input.isBlank()) {
             defaultPath
@@ -378,6 +424,18 @@ private fun promptDirectoryPath(prompt: String, defaultPath: Path): Path {
             }
         }
         return chosen
+    }
+}
+
+private fun promptPathWithDefault(prompt: String, defaultPath: Path): Path {
+    while (true) {
+        print("$prompt [$defaultPath]: ")
+        val input = readConsoleLineOrFail().trim()
+        try {
+            return if (input.isBlank()) defaultPath else Paths.get(input)
+        } catch (_: InvalidPathException) {
+            println("Invalid path. Please try again.")
+        }
     }
 }
 
@@ -476,11 +534,19 @@ private fun readConsoleLineOrFail(): String {
         ?: throw IllegalStateException(
             "No interactive input stream is available. " +
                 "Run this from a normal terminal, or use non-interactive CLI flags like " +
-                "`grade --input ... --output ...` or `generate --output ...`."
+                "`grade --input ... --output ...` or `generate --output ...`.",
         )
 }
 
 private data class InteractiveOutputChoice(
     val outputPath: Path,
     val overwrite: Boolean,
+)
+
+private data class InteractiveGradeOptions(
+    val headerRowNumber: Int?,
+    val maxTotal: Double?,
+    val totalColumnHint: String?,
+    val percentageColumnName: String,
+    val gradeColumnName: String,
 )

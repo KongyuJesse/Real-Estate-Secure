@@ -1,39 +1,183 @@
-# Grade Calculator (Kotlin)
+# Grade Calculator Studio
 
-Kotlin/Gradle project for grading Excel score sheets from the command line or a desktop Swing UI.
+Grade Calculator Studio is a Kotlin-based Excel grading toolkit with two polished ways to work:
 
-## Project Layout
+- a professional CLI for automation, guided terminal workflows, and batch processing
+- a redesigned desktop UI for users who want a cleaner visual workspace
 
-The `gradecalculator` folder contains three main parts:
+The project grades student score sheets, generates realistic sample workbooks, and includes a built-in Kotlin concepts showcase for the assignment requirements.
 
-- `console/`: the real application. It contains the CLI, Swing desktop UI, Excel grading logic, random workbook generator, and tests.
-- `app/`: an Android app scaffold with manifest/resources only. There is no activity or mobile grading screen yet.
-- Gradle files at the root: shared build configuration for the `:console` and `:app` modules.
+## What Was Improved In This Version
 
-Useful paths after analyzing the folder:
+This iteration focused on turning the project from a functional prototype into a more polished tool.
 
-- `console/src/main/kotlin/.../Main.kt`: entry point and interactive flows.
-- `console/src/main/kotlin/.../ExcelGrader.kt`: workbook grading rules.
-- `console/src/main/kotlin/.../RandomSheetGenerator.kt`: sample workbook generator.
-- `console/src/main/kotlin/.../DesktopApp.kt`: Swing desktop UI.
-- `console/src/main/kotlin/.../KotlinConcepts.kt`: Kotlin concepts showcase used by the assignment.
-- `console/src/test/kotlin/...`: tests covering CLI parsing, grading, generation, grade scale, and Kotlin concepts.
-- `console/random_students.xlsx`: sample workbook already present in the repository.
-- `console/build/`, `console/bin/`, `.gradle/`, `.kotlin/`: generated build artifacts and caches.
+### UI improvements
 
-## Run Modes
+- redesigned the desktop window as a more intentional studio-style interface
+- added a branded hero section and stronger visual hierarchy
+- upgraded the grading and generation screens into cleaner card-based workspaces
+- replaced plain text result areas with richer HTML summaries
+- expanded form controls so users can set output paths, worksheet names, grading hints, mark limits, and overwrite behavior from the UI
+- improved workbook inspection so the UI can preview sheet names and suggest output files before grading
 
-1. CLI mode: `interactive`, `grade`, `generate`, `concepts`
-2. Desktop UI mode: `ui` or `desktop`
+### CLI improvements
 
-## Prerequisites
+- rewrote the help output so it reads like a professional command guide
+- improved success and error messages with clearer formatting and summaries
+- made batch grading output easier to scan
+- upgraded the interactive wizard so it now supports:
+  - generating workbooks with more options
+  - grading a single workbook
+  - grading an entire folder
+  - launching the desktop UI
+  - viewing the Kotlin concepts showcase
+- removed an awkward prompt in normal file-grading mode by defaulting single-file output to a sibling `*_graded` workbook
 
-- JDK 17 or later
-- Windows PowerShell for the `gradlew.bat` examples below
+### Engineering and maintenance improvements
 
-## Quick Start
+- introduced shared presentation helpers so CLI and desktop output feel consistent
+- added tests for the new command aliases and text presentation layer
+- updated the Gradle wrapper to `8.14.4` for better compatibility with Java `24`
+- configured Kotlin compilation to use in-process execution for a smoother sandboxed build experience
 
-Run the interactive CLI wizard:
+## Product Overview
+
+The studio supports three primary workflows:
+
+1. grade a workbook and write `Total`, `Percentage`, and `Grade` columns
+2. grade a whole folder of Excel files into a clean output directory
+3. generate realistic sample spreadsheets for practice, demos, and QA
+
+## Core Features
+
+- reads `.xlsx` and `.xls`
+- auto-detects likely header rows
+- detects numeric score columns automatically
+- reuses an existing total column when one is present
+- writes missing `Total`, `Percentage`, and `Grade` columns
+- clamps percentages above `100`
+- corrects negative marks to `0`
+- skips empty rows and rows without usable numeric data
+- supports sheet selection by name or index
+- supports recursive folder grading
+- prevents accidental overwrite unless explicitly allowed
+- generates sample student workbooks with customizable subjects and score ranges
+
+## Project Structure
+
+```text
+gradecalculator/
+|-- app/
+|   `-- Android app scaffold for future mobile expansion
+|-- console/
+|   |-- src/main/kotlin/com/example/gradecalculator/console/
+|   |   |-- Main.kt
+|   |   |-- Cli.kt
+|   |   |-- DesktopApp.kt
+|   |   |-- Presentation.kt
+|   |   |-- ExcelGrader.kt
+|   |   |-- RandomSheetGenerator.kt
+|   |   |-- GradeScale.kt
+|   |   |-- WorkbookSheets.kt
+|   |   `-- KotlinConcepts.kt
+|   `-- src/test/kotlin/com/example/gradecalculator/console/
+|-- gradle/
+|-- build.gradle.kts
+|-- gradle.properties
+|-- settings.gradle.kts
+`-- README.md
+```
+
+## Module Responsibilities
+
+### `console/`
+
+This is the real working application module.
+
+It contains:
+
+- the CLI parser and interactive wizard
+- the desktop Swing UI
+- the Excel grading engine
+- the random workbook generator
+- the Kotlin concepts showcase
+- the automated test suite
+
+### `app/`
+
+This is currently an Android scaffold module.
+
+It still exists for future mobile expansion, but the production-grade UI in this repository today is the desktop UI inside `console/`.
+
+## Desktop UI
+
+The desktop interface is launched through the `console` module.
+
+### Generator screen
+
+The workbook generator screen lets you configure:
+
+- output workbook path
+- worksheet name
+- number of student rows
+- minimum and maximum marks
+- optional seed value
+- subject list
+- whether a total column should be included
+- overwrite behavior
+
+After generation, the summary panel shows:
+
+- the output path
+- the sheet name
+- the number of generated students
+- the selected subjects
+
+### Grader screen
+
+The workbook grader screen lets you configure:
+
+- input workbook path
+- output workbook path
+- worksheet selection
+- optional header row override
+- optional maximum total override
+- total column hint
+- percentage column name
+- grade column name
+- overwrite behavior
+
+It also supports workbook inspection before grading so the user can:
+
+- preview sheet names
+- confirm the suggested output path
+- review the workbook at a glance before running the grader
+
+After grading, the summary panel shows:
+
+- input and output workbook paths
+- the sheet used
+- processed row counts
+- skipped-row diagnostics
+- correction counts
+- the maximum total used
+- the final grade distribution
+
+## CLI
+
+The CLI is intended for power users, automation, and batch processing.
+
+### Commands
+
+- `interactive` or `wizard`
+- `ui`, `desktop`, or `studio`
+- `concepts`, `syntax`, or `kotlin`
+- `grade`
+- `generate`
+
+### Interactive mode
+
+Run the wizard:
 
 ```powershell
 .\gradlew.bat :console:run
@@ -45,212 +189,81 @@ or:
 .\gradlew.bat :console:run --args="interactive"
 ```
 
-Run the desktop UI:
+The interactive menu now supports:
+
+1. generating a sample workbook
+2. grading one workbook
+3. grading an entire folder
+4. launching the desktop UI
+5. viewing the Kotlin concepts showcase
+6. showing CLI help
+7. exiting
+
+### Desktop UI command
 
 ```powershell
 .\gradlew.bat :console:run --args="ui"
 ```
 
-Show command help:
+### Help command
 
 ```powershell
 .\gradlew.bat :console:run --args="help"
 ```
 
-## Common Commands
-
-Grade one workbook:
+### Grade one workbook
 
 ```powershell
 .\gradlew.bat :console:run --args="grade --input C:\data\students.xlsx --output C:\data\students_graded.xlsx"
 ```
 
-Grade all workbooks in a folder:
+If `--output` is omitted for a single workbook, the CLI now defaults to a sibling output file named like:
+
+```text
+students_graded.xlsx
+```
+
+### Grade a folder
 
 ```powershell
 .\gradlew.bat :console:run --args="grade --input C:\data\raw-marks --output-dir C:\data\graded --recursive"
 ```
 
-Generate a random workbook:
+### Generate a sample workbook
 
 ```powershell
 .\gradlew.bat :console:run --args="generate --output C:\data\random_students.xlsx --students 50 --subjects Math,English,Physics,Chemistry,Biology"
 ```
 
-Show the Kotlin concepts showcase:
+### View the Kotlin concepts showcase
 
 ```powershell
 .\gradlew.bat :console:run --args="concepts"
 ```
 
-## Manual Guide
+## Grading Rules
 
-### 1. Prepare the Excel file
+The grading engine follows a practical workflow:
 
-The grader works with `.xlsx` and `.xls` files.
+1. verify that the input workbook exists
+2. select the requested sheet, or auto-detect a usable one
+3. locate the header row
+4. ignore metadata-style columns such as student name or ID
+5. detect numeric score columns
+6. reuse an existing total column if one exists, or create one
+7. create missing percentage and grade columns when needed
+8. infer or accept the maximum total
+9. process each row
+10. write totals, percentages, and letter grades
+11. return a structured summary for the CLI or desktop UI
 
-For best results, your sheet should have:
+### Error handling built into grading
 
-- one header row with text labels
-- one row per student below the header
-- metadata columns such as `Student ID` or `Student Name`
-- subject columns that contain numeric scores
-
-Recommended header style:
-
-| Student ID | Student Name | Math | English | Physics |
-|---|---|---|---|---|
-| STU-0001 | Ada Lovelace | 95 | 88 | 91 |
-| STU-0002 | Grace Hopper | 70 | 60 | 65 |
-
-How the grader interprets the sheet:
-
-- It auto-detects a header row if you do not provide `--header-row`.
-- It ignores metadata-style columns such as name, ID, registration, class, section, gender, remarks, and similar labels.
-- It treats remaining columns with numeric data as mark columns.
-- If a `Total`-style column already exists, it can use it.
-- It writes `Total`, `Percentage`, and `Grade` columns if they are missing.
-
-### 2. Grade one workbook from the CLI
-
-Use this when you already know the input and output file paths:
-
-```powershell
-.\gradlew.bat :console:run --args="grade --input C:\data\students.xlsx --output C:\data\students_graded.xlsx"
-```
-
-Useful options:
-
-- `--sheet "Class A"`: use a specific sheet by name
-- `--sheet 1`: use a specific sheet by index; naming the sheet is safer when possible
-- `--header-row 1`: header row number is 1-based
-- `--max-total 300`: manually set the full score when auto-inference is not correct
-- `--total-column "Overall Score"`: help the grader recognize an existing total column
-- `--percentage-column "Percentage"`: name for the written percentage column
-- `--grade-column "Grade"`: name for the written grade column
-- `--overwrite`: replace an existing output file
-
-What happens during grading:
-
-- negative marks are corrected to `0`
-- percentages above `100` are clamped to `100`
+- negative scores are corrected to `0`
+- percentages above `100` are clamped
 - empty rows are skipped
-- rows with no valid numeric scores are skipped
-- the app prints row counts and grade distribution after completion
-
-### 3. Grade a whole folder
-
-If `--input` points to a folder, the app grades every Excel file inside it.
-
-```powershell
-.\gradlew.bat :console:run --args="grade --input C:\data\raw-marks --output-dir C:\data\graded --recursive"
-```
-
-Important rules:
-
-- use `--output-dir` for folder grading
-- do not use `--output` when the input is a folder
-- use `--recursive` to include subfolders
-- each result file is named `<original_name>_graded.<ext>`
-
-### 4. Use the interactive wizard
-
-Running `:console:run` with no arguments opens the interactive menu:
-
-1. Generate a sample Excel sheet
-2. Grade an Excel sheet
-3. Launch desktop UI
-4. Show CLI help
-5. Exit
-
-If you choose `Grade an Excel sheet`, the wizard:
-
-1. asks for the Excel file path
-2. lists workbook sheets if more than one exists
-3. lets you keep the default output name or type a new one
-4. asks whether to overwrite if the target file already exists
-
-If you choose `Generate a sample Excel sheet`, the wizard asks for:
-
-- output file path
-- number of students
-- comma-separated subject names
-
-### 5. Use the desktop UI
-
-The Swing UI has two tabs:
-
-- `Generate Sheet`
-- `Grade Sheet`
-
-`Generate Sheet` tab:
-
-- choose an output file
-- enter the number of students
-- enter comma-separated subjects
-- click `Generate Sheet`
-
-`Grade Sheet` tab:
-
-- choose the Excel file to grade
-- select a sheet or leave it on `Auto-detect sheet`
-- choose whether to keep the default graded filename
-- confirm overwrite if needed
-- click `Grade File`
-
-The desktop UI shows a short result summary in the text area after each action.
-
-### 6. Generate sample data
-
-The generator creates a workbook with:
-
-- sheet name `Students` by default
-- `Student ID` and `Student Name` columns
-- one numeric column per subject
-- an optional `Total` column
-
-Example:
-
-```powershell
-.\gradlew.bat :console:run --args="generate --output C:\data\random_students.xlsx --students 30 --subjects Math,English,Physics --seed 42"
-```
-
-Useful generator options:
-
-- `--students <number>`
-- `--subjects <comma-separated list>`
-- `--sheet-name <name>`
-- `--include-total true|false`
-- `--min-mark <number>`
-- `--max-mark <number>`
-- `--seed <number>`
-- `--overwrite`
-
-If you omit the file extension, the generator saves the file as `.xlsx`.
-
-### 7. View the Kotlin assignment coverage
-
-The `concepts` command prints the assignment-oriented Kotlin showcase from `KotlinConcepts.kt`.
-
-It demonstrates:
-
-- functions and expression bodies
-- default and named arguments
-- varargs
-- infix and extension functions
-- immutable collections
-- lambdas and higher-order functions
-- `map`, `filter`, and `fold`
-- classes, inheritance, interfaces, data classes, and sealed classes
-
-## Grading Features
-
-- Reads `.xlsx` and `.xls`
-- Detects header rows and score columns automatically
-- Calculates totals, percentages, and letter grades
-- Supports batch folder grading and recursive mode
-- Prevents accidental overwrite unless `--overwrite` is used or you confirm it interactively
-- Prints grading statistics, including skipped rows and grade distribution
+- rows without usable scores are skipped
+- output files are protected from accidental overwrite unless approved
 
 ## Default Grade Scale
 
@@ -270,31 +283,141 @@ It demonstrates:
 | 60-62 | D- |
 | <60 | F |
 
-Edit [`GradeScale.kt`](console/src/main/kotlin/com/example/gradecalculator/console/GradeScale.kt) to customize the grading bands.
+Customize the scale in:
 
-## Troubleshooting
+```text
+console/src/main/kotlin/com/example/gradecalculator/console/GradeScale.kt
+```
 
-- `Output file already exists`: pass `--overwrite` or choose a different output file.
-- `Could not detect a header row`: supply `--header-row <number>`.
-- `Could not detect any mark columns or total column`: make sure score columns contain numeric values and metadata columns are clearly labeled.
-- `Unable to infer a valid maximum total`: run again with `--max-total <number>`.
-- `Desktop UI is not available in a headless environment`: use CLI mode instead of `ui`.
-- `No interactive input stream is available`: run from a normal terminal, or use full CLI flags instead of the wizard.
+## Sample Workbook Generation
 
-## Tests
+The generator creates realistic practice files with:
 
-Run all console tests:
+- `Student ID`
+- `Student Name`
+- one numeric column per subject
+- an optional `Total` column
+
+You can control:
+
+- student count
+- subject names
+- sheet name
+- score range
+- repeatability through a seed
+- output file path
+
+## Kotlin Concepts Coverage
+
+The project still includes the assignment-focused Kotlin showcase from `KotlinConcepts.kt`.
+
+It explicitly demonstrates:
+
+- functions and expression bodies
+- default and named arguments
+- varargs
+- infix and extension functions
+- immutable collections
+- lambdas and higher-order functions
+- `map`, `filter`, and `fold`
+- classes, inheritance, interfaces, data classes, and sealed classes
+
+## Build And Run
+
+### Prerequisites
+
+- Java JDK `17+`
+- Gradle wrapper included in the repository
+
+### Run the CLI wizard
+
+```powershell
+.\gradlew.bat :console:run
+```
+
+### Run the desktop UI
+
+```powershell
+.\gradlew.bat :console:run --args="ui"
+```
+
+### Run the console tests
 
 ```powershell
 .\gradlew.bat :console:test
 ```
 
-## Collaboration
+## Verification
 
-For changes in this folder, use a short-lived branch from `main`, for example `docs/gradecalculator-readme-update` or `feat/gradecalculator-improvement`.
+The updated console module was verified with:
 
-Before opening a pull request:
+```powershell
+.\gradlew.bat -g "c:\Users\HP GAMING LAPTOP\Desktop\AND Project and Assignment\.gradle-home" --no-daemon :console:test
+```
 
-- keep the change scoped to `gradecalculator/` whenever possible
-- run `.\gradlew.bat :console:test`
-- open the pull request into `main`
+During sandboxed verification, the environment also used:
+
+- `ANDROID_USER_HOME=.android`
+- `GRADLE_OPTS=-Duser.home=.test-home`
+
+Those extra environment settings were only needed for the sandboxed build environment, not as part of normal project usage on a standard local machine.
+
+## Tests Included
+
+The `console` module currently covers:
+
+- CLI command parsing
+- Excel grading behavior
+- random workbook generation
+- grade scale boundaries
+- Kotlin concepts coverage
+- new presentation and reporting helpers
+
+## Important Files
+
+- `console/src/main/kotlin/com/example/gradecalculator/console/Main.kt`
+  This is the CLI entry point and the interactive wizard.
+- `console/src/main/kotlin/com/example/gradecalculator/console/Cli.kt`
+  This parses commands and renders command help.
+- `console/src/main/kotlin/com/example/gradecalculator/console/DesktopApp.kt`
+  This contains the redesigned desktop UI.
+- `console/src/main/kotlin/com/example/gradecalculator/console/Presentation.kt`
+  This contains shared CLI and desktop presentation helpers.
+- `console/src/main/kotlin/com/example/gradecalculator/console/ExcelGrader.kt`
+  This is the core grading engine.
+- `console/src/main/kotlin/com/example/gradecalculator/console/RandomSheetGenerator.kt`
+  This creates sample workbooks.
+
+## Troubleshooting
+
+- `Output file already exists`
+  Use `--overwrite`, approve the overwrite in the UI, or choose a different path.
+- `Could not detect a header row`
+  Supply a header row explicitly with the CLI or enter one in the desktop UI.
+- `Could not detect any mark columns or total column`
+  Make sure score columns are numeric and metadata columns are clearly labeled.
+- `Unable to infer a valid maximum total`
+  Provide `--max-total` or set the maximum total in the desktop grader form.
+- `Desktop UI is not available in a headless environment`
+  Use CLI mode instead.
+
+## Future Expansion
+
+Good next steps for the project would be:
+
+- adding a mobile UI inside the Android module
+- supporting user-defined grade scales from configuration files
+- exporting richer grading reports
+- adding workbook previews and validation warnings before grading
+- introducing UI tests for the desktop workflow
+
+## Summary
+
+Grade Calculator Studio is now a cleaner, more professional project:
+
+- the CLI is clearer and easier to trust
+- the desktop UI is much more polished and pleasant to use
+- the documentation is explicit enough for both users and maintainers
+- the build setup is more compatible with the current Java environment
+
+The result is still the same core product, but it now feels much closer to something you could confidently demo, submit, or extend.
