@@ -45,7 +45,28 @@ class LoggerDelegationTest {
     }
 
     @Test
-    fun `builds a summary from entries`() {
+    fun `summarizeEntries counts each log level and characters`() {
+        val entries = listOf(
+            LogEntry("App", LogEvent.Info("Start")),
+            LogEntry("App", LogEvent.Error("Fail")),
+            LogEntry("App", LogEvent.Debug("Trace")),
+        )
+
+        val result = summarizeEntries(entries)
+
+        assertEquals(
+            LogSummary(
+                infoCount = 1,
+                errorCount = 1,
+                debugCount = 1,
+                totalCharacters = 14,
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun `buildSummary formats the calculated log summary`() {
         val entries = listOf(
             LogEntry("App", LogEvent.Info("Start")),
             LogEntry("App", LogEvent.Error("Fail")),

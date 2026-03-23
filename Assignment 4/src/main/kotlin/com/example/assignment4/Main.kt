@@ -37,9 +37,21 @@ infix fun String.startsWithAny(initials: Set<Char>): Boolean {
     return first in normalizedInitials
 }
 
+fun selectStudents(
+    students: List<Student>,
+    initials: Set<Char> = setOf('A', 'B'),
+    selector: (Student) -> Boolean = { true },
+): List<Student> = students
+    .filter { student -> student.name startsWithAny initials }
+    .filter(selector)
+
 fun <T : Comparable<T>> maxOf(list: List<T>): T? =
-    list.reduceOrNull { currentMax, item ->
-        if (item > currentMax) item else currentMax
+    list.fold(null as T?) { currentMax, item ->
+        when {
+            currentMax == null -> item
+            item > currentMax -> item
+            else -> currentMax
+        }
     }
 
 fun classifyStudent(student: Student, passThreshold: Double = 60.0): GradeResult {
@@ -69,8 +81,9 @@ fun buildStudentReport(
     students: List<Student>,
     initials: Set<Char> = setOf('A', 'B'),
     passThreshold: Double = 60.0,
+    selector: (Student) -> Boolean = { true },
 ): String {
-    val matchingStudents = students.filter { it.name startsWithAny initials }
+    val matchingStudents = selectStudents(students, initials, selector)
     val results = matchingStudents.map { student ->
         student to classifyStudent(student, passThreshold = passThreshold)
     }
@@ -98,7 +111,7 @@ fun main() {
     )
 
     val report = buildStudentReport(
-        students,
+        students = students,
         initials = setOf('A', 'B'),
         passThreshold = 75.0,
     )

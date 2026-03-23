@@ -2,27 +2,28 @@ package com.example.assignment3
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class AverageAgeTest {
-    private val people = listOf(
-        Person("Alice", 25),
-        Person("Bob", 30),
-        Person("Charlie", 35),
-        Person("Anna", 22),
-        Person("Ben", 28),
+    private val roster = people(
+        Person("Alice", 25, "Lagos"),
+        Person("Bob", 30, "Abuja"),
+        Person("Charlie", 35, "Lagos"),
+        Person("Anna", 22, "Ibadan"),
+        Person("Ben", 28, "Abuja"),
+        Person("Aisha", 17, "Lagos"),
     )
 
     @Test
     fun `filters only people whose names start with A or B`() {
-        val result = filterPeopleByInitials(people)
+        val result = filterPeopleByInitials(roster)
 
         assertEquals(
             listOf(
-                Person("Alice", 25),
-                Person("Bob", 30),
-                Person("Anna", 22),
-                Person("Ben", 28),
+                Person("Alice", 25, "Lagos"),
+                Person("Bob", 30, "Abuja"),
+                Person("Anna", 22, "Ibadan"),
+                Person("Ben", 28, "Abuja"),
+                Person("Aisha", 17, "Lagos"),
             ),
             result,
         )
@@ -30,11 +31,11 @@ class AverageAgeTest {
 
     @Test
     fun `extracts ages from matching people`() {
-        val filteredPeople = filterPeopleByInitials(people)
+        val filteredPeople = filterPeopleByInitials(roster)
 
         val result = extractAges(filteredPeople)
 
-        assertEquals(listOf(25, 30, 22, 28), result)
+        assertEquals(listOf(25, 30, 22, 28, 17), result)
     }
 
     @Test
@@ -45,20 +46,53 @@ class AverageAgeTest {
     }
 
     @Test
-    fun `formats the average age to one decimal place`() {
-        assertEquals("26.3", formatAverageAge(26.25))
+    fun `summarizeByCity counts selected people with fold`() {
+        val result = summarizeByCity(roster) { person ->
+            person.name startsWithAny setOf('A', 'B') && person.age >= 18
+        }
+
+        assertEquals(
+            mapOf(
+                "Lagos" to 1,
+                "Abuja" to 2,
+                "Ibadan" to 1,
+            ),
+            result,
+        )
     }
 
     @Test
-    fun `returns null when there are no ages to average`() {
-        assertNull(calculateAverageAge(emptyList()))
+    fun `analyzePeople returns a structured report for adult matches`() {
+        val result = analyzePeople(
+            people = roster,
+            initials = setOf('A', 'B'),
+            selector = { it.age >= 18 },
+        )
+
+        assertEquals(
+            AgeReport.MatchedGroup(
+                initials = setOf('A', 'B'),
+                people = listOf(
+                    Person("Alice", 25, "Lagos"),
+                    Person("Bob", 30, "Abuja"),
+                    Person("Anna", 22, "Ibadan"),
+                    Person("Ben", 28, "Abuja"),
+                ),
+                averageAge = 26.25,
+                cityCounts = mapOf(
+                    "Lagos" to 1,
+                    "Abuja" to 2,
+                    "Ibadan" to 1,
+                ),
+            ),
+            result,
+        )
     }
 
     @Test
-    fun `builds the final message`() {
-        val result = buildAverageAgeMessage(people)
+    fun `buildAverageAgeMessage handles no matches`() {
+        val result = buildAverageAgeMessage(roster, initials = setOf('Z'))
 
-        assertEquals("Average age for names starting with A or B: 26.3", result)
+        assertEquals("No people matched the initials Z.", result)
     }
 }
-
