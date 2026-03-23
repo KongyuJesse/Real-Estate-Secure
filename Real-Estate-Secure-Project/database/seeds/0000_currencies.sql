@@ -4,4 +4,5 @@ VALUES
   ('USD', 'United States Dollar', '$', true),
   ('EUR', 'Euro', '€', true),
   ('GBP', 'British Pound', '£', true),
-  ('NGN', 'Nigerian Naira', '₦', true);
+  ('NGN', 'Nigerian Naira', '₦', true)
+ON CONFLICT (code) DO NOTHING;

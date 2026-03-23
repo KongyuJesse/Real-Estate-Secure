@@ -31,7 +31,7 @@ VALUES
     5,
     0,
     0,
-    5.0,
+    0.0,
     false,
     false,
     false,
@@ -41,7 +41,7 @@ VALUES
     true,
     1,
     'Starter access for individual buyers and sellers.',
-    '["Basic listings","Standard support"]'::jsonb
+    '["Basic listings","Standard support","Access to paid verification and promotion services"]'::jsonb
   ),
   (
     'Basic',
@@ -53,7 +53,7 @@ VALUES
     10,
     0,
     0,
-    4.5,
+    0.0,
     false,
     true,
     false,
@@ -62,8 +62,8 @@ VALUES
     'verified',
     true,
     2,
-    'For independent agents and small landlords.',
-    '["Priority verification queue","Analytics dashboard","Email support"]'::jsonb
+    'For independent sellers and small property managers.',
+    '["Priority verification queue","Analytics dashboard","Email support","Discounted listing boosts"]'::jsonb
   ),
   (
     'Standard',
@@ -75,7 +75,7 @@ VALUES
     15,
     1,
     1,
-    4.0,
+    0.0,
     true,
     true,
     false,
@@ -84,8 +84,8 @@ VALUES
     'premium',
     true,
     3,
-    'Growing agencies and multi-property owners.',
-    '["Featured listing credits","Priority support","Market insights"]'::jsonb
+    'Growing teams and multi-property sellers.',
+    '["Featured listing credits","Priority support","Market insights","Document vault access"]'::jsonb
   ),
   (
     'Professional',
@@ -97,7 +97,7 @@ VALUES
     20,
     3,
     3,
-    3.5,
+    0.0,
     true,
     true,
     true,
@@ -106,6 +106,26 @@ VALUES
     'pro',
     true,
     4,
-    'High-volume professionals and developers.',
-    '["API access","Dedicated success manager","Bulk tools"]'::jsonb
-  );
+    'High-volume sellers and developers.',
+    '["API access","Dedicated success manager","Bulk tools","Developer workspace discount"]'::jsonb
+  )
+ON CONFLICT (plan_code) DO UPDATE SET
+  plan_name = EXCLUDED.plan_name,
+  price_monthly = EXCLUDED.price_monthly,
+  price_yearly = EXCLUDED.price_yearly,
+  currency = EXCLUDED.currency,
+  max_listings = EXCLUDED.max_listings,
+  max_photos_per_listing = EXCLUDED.max_photos_per_listing,
+  max_videos_per_listing = EXCLUDED.max_videos_per_listing,
+  featured_listings_included = EXCLUDED.featured_listings_included,
+  transaction_fee_percentage = EXCLUDED.transaction_fee_percentage,
+  priority_support = EXCLUDED.priority_support,
+  analytics_access = EXCLUDED.analytics_access,
+  api_access = EXCLUDED.api_access,
+  bulk_listing_tools = EXCLUDED.bulk_listing_tools,
+  company_profile = EXCLUDED.company_profile,
+  badge_display = EXCLUDED.badge_display,
+  is_active = EXCLUDED.is_active,
+  sort_order = EXCLUDED.sort_order,
+  description = EXCLUDED.description,
+  features = EXCLUDED.features;
